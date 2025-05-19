@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "Raid_2024_2025",
+			"Path": "..\\Source\\Raid_2024_2025.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "Raid_2024_2025Editor",
+			"Path": "..\\Source\\Raid_2024_2025Editor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
