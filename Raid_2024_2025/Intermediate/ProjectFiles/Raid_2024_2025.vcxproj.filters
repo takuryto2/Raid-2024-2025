@@ -11,6 +11,7 @@
     <None Include="..\..\Source\Raid_2024_2025Editor.Target.cs">
       <Filter>Source</Filter>
     </None>
+    <None Include="..\..\.vsconfig" />
     <Filter Include="Config">
       <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
     </Filter>
@@ -37,6 +38,15 @@
     </ClCompile>
     <ClCompile Include="..\..\Source\Raid_2024_2025\Raid_2024_2025.h">
       <Filter>Source\Raid_2024_2025</Filter>
+    </ClCompile>
+    <Filter Include="Source\Raid_2024_2025\Private">
+      <UniqueIdentifier>{A83D2D8A-ACB5-3398-8C49-9AF16CAC9E6D}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Raid_2024_2025\Private\DefaultPlayer.cpp">
+      <Filter>Source\Raid_2024_2025\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Raid_2024_2025\Private\DefaultPlayer.h">
+      <Filter>Source\Raid_2024_2025\Private</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

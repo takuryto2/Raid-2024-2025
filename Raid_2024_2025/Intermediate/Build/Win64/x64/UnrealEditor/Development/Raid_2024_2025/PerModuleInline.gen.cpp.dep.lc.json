@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\louis\\documents\\github\\raid-2024-2025\\raid_2024_2025\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\raid_2024_2025\\permoduleinline.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\louis\\documents\\github\\raid-2024-2025\\raid_2024_2025\\intermediate\\build\\win64\\x64\\raid_2024_2025editor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\users\\louis\\documents\\github\\raid-2024-2025\\raid_2024_2025\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\raid_2024_2025\\definitions.raid_2024_2025.h",
+            "c:\\program files\\epic games\\ue_5.5\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
