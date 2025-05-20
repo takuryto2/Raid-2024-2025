@@ -43,3 +43,8 @@ void ACharacterController::MoveRight(float Value)
 {
     AddMovementInput(FVector(0.f, 1.f, 0.f), Value);
 }
+
+void ACharacterController::MoveLeft(float Value)
+{
+    AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+}
