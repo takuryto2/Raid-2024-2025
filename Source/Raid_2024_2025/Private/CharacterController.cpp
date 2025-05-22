@@ -1,7 +1,4 @@
 #include "CharacterController.h"
-
-#include <iostream>
-
 #include "GameFramework/Controller.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -26,20 +23,63 @@ void ACharacterController::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void ACharacterController::Move(float ActionValue)
 {
-    AddMovementInput(FVector(0.f, ActionValue, 0.f), MoveSpeed);
-    GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, *FString::SanitizeFloat(ActionValue));
+    AddMovementInput(FVector(ActionValue, ActionValue, 0.f), MoveSpeed);
+    GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, TEXT("Move: ") + FString::SanitizeFloat(ActionValue));
 }
 
 void ACharacterController::Dash(FVector2D ActionVector2)
 {
-    if (ActionVector2.Y > 0.f)
+    if (!CanDash)
+        return;
+
+    CanDash = false;
+    float tempDashForce = DashForce;
+
+    if (ActionVector2 < FVector2D::ZeroVector)
     {
-        FVector DashDirection = FVector(ActionVector2, 0.f) * DashForce;
-        LaunchCharacter(DashDirection, true, true);
+        tempDashForce = -DashForce;
     }
     else
     {
-        LaunchCharacter(GetActorForwardVector() * DashForce, false, false);
+        tempDashForce = DashForce;
     }
+
+    FVector DashDirection = FVector(ActionVector2, 0.f) * tempDashForce;
+
+    // Vérifie si le personnage est en l'air
+    if (!GetCharacterMovement()->IsMovingOnGround())
+    {
+        // Applique une friction supplémentaire
+        GetCharacterMovement()->BrakingFrictionFactor = DashFriction;
+        DashAir = true;
+    }
+    else
+    {
+        GetCharacterMovement()->GroundFriction = 0.0f;
+    }
+
+    LaunchCharacter(DashDirection, true, true);
+
+    // Attendre 1 seconde puis réinitialiser la friction
+    FTimerHandle TimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+    {
+        GetCharacterMovement()->GroundFriction = 1.0f;
+        if (!DashAir)
+        {
+            CanDash = true;
+        }
+    }, 1.0f, false);
 }
 
+void ACharacterController::Landed(const FHitResult& Hit)
+{
+    Super::Landed(Hit);
+
+    if (!CanDash && DashAir)
+    {
+        GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
+        DashAir = false;
+        CanDash = true;
+    }
+}
