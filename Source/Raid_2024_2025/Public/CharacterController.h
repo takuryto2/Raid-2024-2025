@@ -11,11 +11,20 @@ class RAID_2024_2025_API ACharacterController : public ACharacter
 
 public:
     ACharacterController();
+    
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    float MoveSpeed = 600.f;
+
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    float DashForce = 6.f;
 
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    void MoveRight(float Value);
-    void MoveLeft(float Value);
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void Move(float ActionValue);
+
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void Dash(FVector2D ActionVector2);
 };

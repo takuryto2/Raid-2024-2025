@@ -76,3 +76,5 @@ DerivedDataCache/*
 .vscode/*
 .ignore
 *.code-workspace
+/Content/__ExternalActors__
+/Content/__ExternalObjects__
