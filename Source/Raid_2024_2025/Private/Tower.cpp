@@ -1,7 +1,5 @@
 #include "Tower.h"
 #include "Camera/CameraComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "DrawDebugHelpers.h"
 
 ATower::ATower()
 {
@@ -41,8 +39,6 @@ bool ATower::TryTurn(float ActionValue)
         ECC_Visibility,
         Params
     );
-
-    //DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 2.0f, 0, 2.0f);
 
     if (bHit)
     {
@@ -104,7 +100,6 @@ FVector ATower::GetFutureCameraPosition(float ActionValue) const
     return CameraPivot->GetComponentLocation() + FutureRotation.RotateVector(LocalOffset);
 }
 
-
 void ATower::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -125,6 +120,5 @@ void ATower::Tick(float DeltaTime)
         bIsTurning = false;
         SetActorTickEnabled(false);
     }
-
 }
 
