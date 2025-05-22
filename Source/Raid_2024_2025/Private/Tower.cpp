@@ -67,6 +67,36 @@ void ATower::CancelTurn()
 {
     /*if (GEngine)
         GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, TEXT("TURN CANCELLED"));*/
+
+    if (!CameraPivot)
+        return;
+
+    UCameraComponent* Camera = nullptr;
+    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
+    {
+        if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
+        {
+            Camera = FoundCamera;
+            break;
+        }
+    }
+
+    if (!Camera)
+        return;
+
+    FVector OriginalLocation = Camera->GetRelativeLocation();
+    float shaveValue = 1.f;
+    FVector ShakeOffset = FVector(FMath::RandRange(-shaveValue, shaveValue), FMath::RandRange(-shaveValue, shaveValue), FMath::RandRange(-shaveValue, shaveValue));
+    Camera->SetRelativeLocation(OriginalLocation + ShakeOffset);
+
+    FTimerHandle TimerHandle;
+    GetWorldTimerManager().SetTimer(TimerHandle, [Camera, OriginalLocation]()
+        {
+            if (Camera)
+            {
+                Camera->SetRelativeLocation(OriginalLocation);
+            }
+        }, 0.05f, false);
 }
 
 FVector ATower::GetFutureCameraPosition(float ActionValue) const
