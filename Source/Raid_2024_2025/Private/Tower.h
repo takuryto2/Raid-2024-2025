@@ -13,17 +13,22 @@ public:
     ATower();
 
     UFUNCTION(BlueprintCallable)
-    bool TryTurn(float ActionValue); 
+    bool TryTurn(float ActionValue);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USceneComponent* CameraPivot;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    AActor* PlayerActor;
 
 protected:
     virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
 
     void Turn(float ActionValue);
+    void CancelTurn();
+    FVector GetFutureCameraPosition(float ActionValue) const;
+
 
     UPROPERTY(EditAnywhere)
     float TurnDuration = 0.5f;
