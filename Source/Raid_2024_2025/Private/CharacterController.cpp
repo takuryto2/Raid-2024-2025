@@ -1,27 +1,13 @@
 #include "CharacterController.h"
+
+#include <iostream>
+
 #include "GameFramework/Controller.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ACharacterController::ACharacterController()
 {
     PrimaryActorTick.bCanEverTick = true;
-
-    // Lock le mouvement à Y uniquement (axe horizontal du plan X/Y)
-    GetCharacterMovement()->bOrientRotationToMovement = true;
-    bUseControllerRotationYaw = false;
-
-    // Caméra
-    USpringArmComponent* SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-    SpringArm->SetupAttachment(RootComponent);
-    SpringArm->TargetArmLength = 500.f;
-    SpringArm->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
-    SpringArm->bUsePawnControlRotation = false;
-
-    UCameraComponent* Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("SideViewCamera"));
-    Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-    Camera->bUsePawnControlRotation = false;
 
     // Constrain le mouvement uniquement au plan Y
     GetCharacterMovement()->bConstrainToPlane = true;
@@ -36,15 +22,24 @@ void ACharacterController::BeginPlay()
 void ACharacterController::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
-    PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterController::MoveRight);
 }
 
-void ACharacterController::MoveRight(float Value)
+void ACharacterController::Move(float ActionValue)
 {
-    AddMovementInput(FVector(0.f, 1.f, 0.f), Value);
+    AddMovementInput(FVector(0.f, ActionValue, 0.f), MoveSpeed);
+    GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, *FString::SanitizeFloat(ActionValue));
 }
 
-void ACharacterController::MoveLeft(float Value)
+void ACharacterController::Dash(FVector2D ActionVector2)
 {
-    AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+    if (ActionVector2.Y > 0.f)
+    {
+        FVector DashDirection = FVector(ActionVector2, 0.f) * DashForce;
+        LaunchCharacter(DashDirection, true, true);
+    }
+    else
+    {
+        LaunchCharacter(GetActorForwardVector() * DashForce, false, false);
+    }
 }
+
