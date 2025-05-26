@@ -78,6 +78,6 @@ void ACharacterPawn::Jump()
 
 void ACharacterPawn::Dash()
 {
-	
+	MovementComponent->DashInput();
 }
 

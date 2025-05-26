@@ -33,22 +33,38 @@ void UCharacterPawnMovementComponent::BeginPlay()
 
 
 // Called every frame
-void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                                    FActorComponentTickFunction* ThisTickFunction)
+void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!CurrentDirection.IsNearlyZero())
-	{
-		WalkProgress += DeltaTime / AccelTime;
-		FMath::Clamp(WalkProgress, 0,1);
-		
-		CurrentSpeed = SpeedCurve->GetFloatValue(WalkProgress) * VMax;
+	if (DashCooldownTimer > 0.0f)
+		DashCooldownTimer -= DeltaTime;
 
-		FVector2D MoveVector2 = CurrentSpeed * DeltaTime * CurrentDirection;
-		FVector MoveVector = FVector(MoveVector2.X, MoveVector2.Y, 0);
+	if (bIsDashing)
+	{
+		DashTimer -= DeltaTime;
+		FVector2D MoveVector2 = DashSpeed * DeltaTime * DashDirection;
+		FVector MoveVector = FVector(0, MoveVector2.Y, 0);
 
 		UpdatedComponent->MoveComponent(MoveVector, FQuat::Identity, true);
+
+		if (DashTimer <= 0.0f)
+			bIsDashing = false;
+	}
+	else if (!CurrentDirection.IsNearlyZero())
+	{
+		if (bCanMove)
+		{
+					WalkProgress += DeltaTime / AccelTime;
+            		FMath::Clamp(WalkProgress, 0, 1);
+            
+            		CurrentSpeed = SpeedCurve->GetFloatValue(WalkProgress) * VMax;
+            
+            		FVector2D MoveVector2 = CurrentSpeed * DeltaTime * CurrentDirection;
+            		FVector MoveVector = FVector(MoveVector2.X, MoveVector2.Y, 0);
+            
+            		UpdatedComponent->MoveComponent(MoveVector, FQuat::Identity, true);
+		}
 	}
 }
 
@@ -59,16 +75,21 @@ void UCharacterPawnMovementComponent::JumpInput()
 
 void UCharacterPawnMovementComponent::DashInput()
 {
-	
+	FVector2D CurrentDashDirection = CurrentDirection;
+	bCanMove = false;
+	if (!bIsDashing && DashCooldownTimer <= 0.0f)
+	{
+		bIsDashing = true;
+		DashTimer = DashTime;
+		DashDirection = CurrentDashDirection;
+		DashCooldownTimer = DashCooldown + DashTime;
+	}
+	bCanMove = true;
+
 }	
 
 void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
 {
 	CurrentDirection = Direction.GetSafeNormal();
-}
-
-float UCharacterPawnMovementComponent::EaseOutQuart(float x)
-{
-	return 1 - pow(1-x, 4);
 }
 
