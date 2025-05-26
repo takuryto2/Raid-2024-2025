@@ -36,7 +36,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     {
         DashTimer -= DeltaTime;
         FVector2D MoveVector2 = DashSpeed * DeltaTime * DashDirection;
-        FVector MoveVector = FVector(0, MoveVector2.Y, MoveVector2.X); // Dash sur Y/Z
+        FVector MoveVector = FVector(0, MoveVector2.Y, MoveVector2.X);
 
         UpdatedComponent->MoveComponent(MoveVector, FQuat::Identity, true);
 
@@ -72,7 +72,7 @@ void UCharacterPawnMovementComponent::DashInput()
     {
         bIsDashing = true;
         DashTimer = DashTime;
-        if (CurrentDirection.IsNearlyZero())
+        if (CurrentDirection.IsZero())
         {
             DashDirection = FVector2D(0, 1);
         }

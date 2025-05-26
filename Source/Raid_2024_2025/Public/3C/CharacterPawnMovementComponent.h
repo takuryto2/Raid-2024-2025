@@ -61,7 +61,7 @@ private:
 
 #pragma region Dash
 	bool bIsDashing = false;
-	float DashTime = 0.2f;
+	float DashTime = 0.15f;
 	float DashTimer = 0.0f;
 	float DashSpeed = 2500.0f;
 	FVector2D DashDirection;
