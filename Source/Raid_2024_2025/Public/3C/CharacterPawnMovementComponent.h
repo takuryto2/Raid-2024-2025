@@ -1,0 +1,59 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/PawnMovementComponent.h"
+#include "CharacterPawnMovementComponent.generated.h"
+
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class RAID_2024_2025_API UCharacterPawnMovementComponent : public UPawnMovementComponent
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this component's properties
+	UCharacterPawnMovementComponent();
+
+	void JumpInput();
+	void DashInput();
+	void MoveInput(const FVector2D& Direction);
+
+	float EaseOutQuart(float x);
+
+	float CurrentSpeed = 0;
+	
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+	
+	UPROPERTY(EditDefaultsOnly, Category="Acceleration")
+	TObjectPtr<UCurveFloat> SpeedCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category="Acceleration")
+	float VMax = 100;
+
+	UPROPERTY(EditDefaultsOnly, Category="Acceleration")
+	float AccelTime = 0.5f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float FeetSkin = 1;
+	
+public:
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
+
+private:
+	FVector2D CurrentDirection;
+
+	float WalkProgress = 0;
+
+#pragma region Feet Trace
+	float FeetBaseHeight = 0;
+	FCollisionQueryParams CollisionParams;
+	FTraceDelegate TraceDelegate;
+	FCollisionShape FeetShape;
+#pragma endregion
+};
