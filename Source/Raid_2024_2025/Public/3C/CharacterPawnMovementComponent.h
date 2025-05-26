@@ -50,10 +50,22 @@ private:
 
 	float WalkProgress = 0;
 
+	bool bCanMove = true;
+
 #pragma region Feet Trace
 	float FeetBaseHeight = 0;
 	FCollisionQueryParams CollisionParams;
 	FTraceDelegate TraceDelegate;
 	FCollisionShape FeetShape;
 #pragma endregion
+
+#pragma region Dash
+	bool bIsDashing = false;
+	float DashTime = 0.2f;
+	float DashTimer = 0.0f;
+	float DashSpeed = 5000.0f;
+	FVector2D DashDirection;
+	float DashCooldown = 1.0f;
+	float DashCooldownTimer = 0.0f;
+#pragma endregion 
 };
