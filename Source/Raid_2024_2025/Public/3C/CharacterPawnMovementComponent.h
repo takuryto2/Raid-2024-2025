@@ -63,7 +63,7 @@ private:
 	bool bIsDashing = false;
 	float DashTime = 0.2f;
 	float DashTimer = 0.0f;
-	float DashSpeed = 5000.0f;
+	float DashSpeed = 2500.0f;
 	FVector2D DashDirection;
 	float DashCooldown = 1.0f;
 	float DashCooldownTimer = 0.0f;
