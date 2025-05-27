@@ -19,14 +19,15 @@ public:
 	void DashInput();
 	void MoveInput(const FVector2D& Direction);
 
-	float EaseOutQuart(float x);
-
 	float CurrentSpeed = 0;
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	void PerformSlideAsyncTrace(const FVector& DesiredMove);
+
+	void OnAsyncTraceResult(const FTraceHandle& Handle, FTraceDatum& Datum);
 	
 	UPROPERTY(EditDefaultsOnly, Category="Acceleration")
 	TObjectPtr<UCurveFloat> SpeedCurve;
@@ -52,6 +53,17 @@ private:
 
 	bool bCanMove = true;
 
+#pragma region Dash
+	UPROPERTY(EditDefaultsOnly, Category="Movement|Dash")
+	float DashTime = 0.15f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Movement|Dash")
+	float DashSpeed = 2500.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Movement|Dash")
+	float DashCooldown = 1.0f;
+#pragma endregion 
+
 #pragma region Feet Trace
 	float FeetBaseHeight = 0;
 	FCollisionQueryParams CollisionParams;
@@ -61,11 +73,8 @@ private:
 
 #pragma region Dash
 	bool bIsDashing = false;
-	float DashTime = 0.15f;
 	float DashTimer = 0.0f;
-	float DashSpeed = 2500.0f;
 	FVector2D DashDirection;
-	float DashCooldown = 1.0f;
 	float DashCooldownTimer = 0.0f;
 #pragma endregion 
 };

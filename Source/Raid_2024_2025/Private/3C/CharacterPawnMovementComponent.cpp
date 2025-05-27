@@ -53,12 +53,16 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
             CurrentSpeed = SpeedCurve->GetFloatValue(WalkProgress) * VMax;
 
             FVector2D MoveVector2 = CurrentSpeed * DeltaTime * CurrentDirection;
-            FVector MoveVector = FVector(0, MoveVector2.Y, MoveVector2.X);
-
+            FVector MoveVector = FVector(0, MoveVector2.Y, MoveVector2.X) ;
+            
             UpdatedComponent->MoveComponent(MoveVector, FQuat::Identity, true);
+
+            // Collide and slide async trace
+            PerformSlideAsyncTrace(MoveVector);
         }
     }
 }
+
 
 void UCharacterPawnMovementComponent::JumpInput()
 {
@@ -90,3 +94,58 @@ void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
 {
     CurrentDirection = Direction.GetSafeNormal();
 }
+
+void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& MoveVector)
+{
+    if (!GetWorld() || !UpdatedComponent)
+        return;
+
+    const FVector Start = UpdatedComponent->GetComponentLocation();
+    const FVector End = Start + MoveVector;
+
+    FQuat Rotation = UpdatedComponent->GetComponentQuat();
+
+    FTraceDelegate LocalDelegate;
+    LocalDelegate.BindUObject(this, &UCharacterPawnMovementComponent::OnAsyncTraceResult);
+
+    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("PerformSlideAsyncTrace called"));
+    GetWorld()->AsyncSweepByChannel(
+        EAsyncTraceType::Single,
+        Start,
+        End,
+        Rotation,
+        ECC_Pawn,
+        FeetShape,
+        CollisionParams,
+        FCollisionResponseParams::DefaultResponseParam,
+        &LocalDelegate
+    );
+}
+
+void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Handle, FTraceDatum& Datum)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("OnAsyncTraceResult called"));
+
+    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
+        FString::Printf(TEXT("Async Trace Result: %d hits"), Datum.OutHits.Num()));
+    
+    if (!Datum.OutHits.Num())
+        return;
+
+    const FHitResult& Hit = Datum.OutHits[0];
+
+    if (!UpdatedComponent)
+        return;
+
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+        FString::Printf(TEXT("Hit: %s at %s"), *Hit.GetActor()->GetName(), *Hit.Location.ToString()));
+    
+    // Calcul du slide : on glisse le long de la surface percutée
+    FVector Normal = Hit.Normal;
+    FVector DistanceAbs = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetAbs();
+    FVector Deflected = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetSafeNormal();
+
+    FVector NewLocation = (Hit.Location + Deflected) * (DistanceAbs).Size();
+    UpdatedComponent->SetWorldLocation(NewLocation);
+}
+
