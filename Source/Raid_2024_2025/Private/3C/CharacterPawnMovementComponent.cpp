@@ -129,11 +129,12 @@ void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Han
     GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
         FString::Printf(TEXT("Async Trace Result: %d hits"), Datum.OutHits.Num()));
     
+    
     if (!Datum.OutHits.Num())
-        return;
+         return;
 
-    const FHitResult& Hit = Datum.OutHits[0];
-
+    const FHitResult& Hit = GetWorld()->QueryTraceData(Handle, Datum);
+        // Datum.OutHits[0];
     if (!UpdatedComponent)
         return;
 
