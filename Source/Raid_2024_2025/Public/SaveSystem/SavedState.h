@@ -14,9 +14,16 @@ struct FSavedState
     GENERATED_BODY()
 
 	public:
+        UPROPERTY()
 		TMap<FString, FString> strings;
+
+        UPROPERTY()
 		TMap<FString, int32>   ints;
+
+        UPROPERTY()
 		TMap<FString, float>   floats;
+        
+        UPROPERTY()
 		TMap<FString, FVector> vectors;
 	
 	FString ToString() const

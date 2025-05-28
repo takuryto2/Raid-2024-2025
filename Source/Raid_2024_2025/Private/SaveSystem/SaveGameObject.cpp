@@ -22,6 +22,12 @@ void USaveGameObject::Save(const UWorld* world)
 
         state->Log();
     }
+
+    for (TPair<FString, FSavedState>& Pair : objectToState)
+    {
+        LOG("%s", *Pair.Key)
+        Pair.Value.Log();
+    }
 }
 
 void USaveGameObject::Load(const UWorld* world)
@@ -29,11 +35,11 @@ void USaveGameObject::Load(const UWorld* world)
     TArray<AActor*> savableActors;
     GetAllSavableActors(world, savableActors);
 
-    // for (TPair<FString, FSavedState>& Pair : objectToState)
-    // {
-    //     LOG("%s", *Pair.Key)
-    //     Pair.Value.Log();
-    // }
+    for (TPair<FString, FSavedState>& Pair : objectToState)
+    {
+        LOG("Saved Actor: %s", *Pair.Key)
+        Pair.Value.Log();
+    }
 
     for (AActor* savableActor : savableActors)
     {
@@ -41,9 +47,8 @@ void USaveGameObject::Load(const UWorld* world)
 
         if (objectToState.Contains(actorName))
         {
-            FSavedState* state = &objectToState[actorName];
-
-            Cast<ISavable>(savableActor)->SetState(state);
+            LOG("Loading Actor: %s", *actorName)
+            Cast<ISavable>(savableActor)->SetState(&objectToState[actorName]);
         }
     }
 }
