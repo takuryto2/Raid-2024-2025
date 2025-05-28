@@ -23,12 +23,12 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 		UPROPERTY(VisibleAnywhere, Category = Basic)
 		uint32  slotIndex;
 	
-	private:
+		UPROPERTY()
 		TMap<FString, FSavedState> objectToState;
 
 	public:
-		void Save();
-		void Load();
+		void Save(const UWorld* world);
+		void Load(const UWorld* world);
 
-		void GetAllSavableActors(TArray<TScriptInterface<ISavable>>& outSavable);
+		void GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable);
 };

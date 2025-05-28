@@ -27,8 +27,6 @@ FSavedState* ATestSaveActor::GetState()
 	FSavedState* rv = new FSavedState();
 	rv->vectors.Add("pos", GetActorLocation());
 
-	UE_LOG(LogTemp, Warning, TEXT("ffs"));
-
 	return rv;
 }
 
@@ -54,23 +52,26 @@ void ATestSaveActor::TestSave()
 	if (!aled)
 		return;
 
-	aled->slotName = "aled";
+	aled->slotName = "kms";
 	aled->slotIndex = 0;
 
-	aled->Save();
+	aled->Save(GetWorld());
 
-	UGameplayStatics::SaveGameToSlot(aled, aled->slotName, aled->slotIndex);
+	if (UGameplayStatics::SaveGameToSlot(aled, aled->slotName, aled->slotIndex))
+		LOG("Saved game!")
 }
 
 void ATestSaveActor::TestLoad()
 {
-	USaveGameObject* aled = Cast<USaveGameObject>(UGameplayStatics::LoadGameFromSlot("aled", 0));
+	USaveGameObject* aled = Cast<USaveGameObject>(UGameplayStatics::LoadGameFromSlot("kms", 0));
 
 	if (!aled)
 		return;
 
-	aled->slotName = "aled";
+	aled->slotName = "kms";
 	aled->slotIndex = 0;
 
-	aled->Load();
+	aled->Load(GetWorld());
+
+	LOG("Loaded Game!")
 }

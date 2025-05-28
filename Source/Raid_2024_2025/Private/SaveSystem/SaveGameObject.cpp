@@ -1,81 +1,49 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SaveSystem/SaveGameObject.h"
 
-
-
-
-
-
-
-
-
-
-void USaveGameObject::GetAllSavableActors(TArray<TScriptInterface<ISavable>>& outSavable)
+void USaveGameObject::GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable)
 {
-    TArray<AActor*> actors;
-    UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USavable::StaticClass(), actors);
-
-    for (AActor* actor : actors)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, actor->GetName());
-        outSavable.Add(TScriptInterface<ISavable>(actor));
-    }
+    UGameplayStatics::GetAllActorsWithInterface(world, USavable::StaticClass(), outSavable);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void USaveGameObject::Save()
+void USaveGameObject::Save(const UWorld* world)
 {
-    TArray<TScriptInterface<ISavable>> savableActors;
-    GetAllSavableActors(savableActors);
+    TArray<AActor*> savableActors;
+    GetAllSavableActors(world, savableActors);
 
-    for (const TScriptInterface<ISavable>& savableActor : savableActors)
+    for (AActor* savableActor : savableActors)
     {
-        AActor* actor = Cast<AActor>(savableActor.GetObject());
+        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, savableActor->GetName());
 
-        if (!&actor)
-            continue;
-
-        FString actorName = actor->GetFullName();
-        FSavedState* state = savableActor->GetState();
+        FString actorName = savableActor->GetFullName();
+        FSavedState* state = Cast<ISavable>(savableActor)->GetState();
         objectToState.Add(actorName, *state);
+
+        state->Log();
     }
 }
 
-void USaveGameObject::Load()
+void USaveGameObject::Load(const UWorld* world)
 {
-    TArray<TScriptInterface<ISavable>> savableActors;
-    GetAllSavableActors(savableActors);
+    TArray<AActor*> savableActors;
+    GetAllSavableActors(world, savableActors);
 
-    for (const TScriptInterface<ISavable>& savableActor : savableActors)
+    // for (TPair<FString, FSavedState>& Pair : objectToState)
+    // {
+    //     LOG("%s", *Pair.Key)
+    //     Pair.Value.Log();
+    // }
+
+    for (AActor* savableActor : savableActors)
     {
-        AActor* actor = Cast<AActor>(savableActor.GetObject());
-
-        if (!&actor)
-            continue;
-
-        FString actorName = actor->GetFullName();
+        FString actorName = savableActor->GetFullName();
 
         if (objectToState.Contains(actorName))
         {
-            savableActor->SetState(&objectToState[actorName]);
+            FSavedState* state = &objectToState[actorName];
+
+            Cast<ISavable>(savableActor)->SetState(state);
         }
     }
 }
