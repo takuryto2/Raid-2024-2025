@@ -18,10 +18,14 @@ public:
 	void JumpInput();
 	void DashInput();
 	void MoveInput(const FVector2D& Direction);
-
-	float CurrentSpeed = 0;
 	
+	float CurrentSpeed = 0;
+
 protected:
+	float halfHeight = 0.0f;
+	float CapsuleStep = 0.0f;
+	float StepMult = 0.0f;
+
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
