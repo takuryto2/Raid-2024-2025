@@ -21,6 +21,10 @@ void UCharacterPawnMovementComponent::BeginPlay()
     if (UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(UpdatedComponent))
     {
         FeetShape = FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius() - FeetSkin);
+        halfHeight = Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
+        CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
+
+        StepMult = 1.0f;
     }
 }
 
@@ -100,8 +104,14 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
     if (!GetWorld() || !UpdatedComponent)
         return;
 
-    const FVector Start = UpdatedComponent->GetComponentLocation();
-    const FVector End = Start + MoveVector;
+    
+    // FVector origin;
+    // FVector boxExtent;
+
+    // GetOwner()->GetActorBounds(false, origin, boxExtent);
+    
+    const FVector Start = UpdatedComponent->GetComponentLocation() + GetOwner()->GetActorUpVector() * -halfHeight;
+    const FVector End = FVector(Start.X, Start.Y,Start.Z - CapsuleStep * StepMult) ;
 
     FQuat Rotation = UpdatedComponent->GetComponentQuat();
 
@@ -109,31 +119,50 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
     LocalDelegate.BindUObject(this, &UCharacterPawnMovementComponent::OnAsyncTraceResult);
 
     GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("PerformSlideAsyncTrace called"));
-    GetWorld()->AsyncSweepByChannel(
+    DrawDebugSphere(GetWorld(), Start, FeetShape.GetSphereRadius(),16, FColor::Blue);
+    DrawDebugSphere(GetWorld(), End, FeetShape.GetSphereRadius(),16, FColor::Red);
+    GetWorld()->AsyncSweepByProfile(
         EAsyncTraceType::Single,
         Start,
         End,
-        Rotation,
-        ECC_Pawn,
+        FQuat::Identity,
+        UCollisionProfile::Pawn_ProfileName,
         FeetShape,
         CollisionParams,
-        FCollisionResponseParams::DefaultResponseParam,
         &LocalDelegate
     );
 }
 
 void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Handle, FTraceDatum& Datum)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("OnAsyncTraceResult called"));
+    // GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("OnAsyncTraceResult called"));
+    //
+    // GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
+    //     FString::Printf(TEXT("Async Trace Result: %d hits"), Datum.OutHits.Num()));
 
-    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
-        FString::Printf(TEXT("Async Trace Result: %d hits"), Datum.OutHits.Num()));
     
-    
+
+    if(!GetWorld()->GetWorld()->QueryTraceData(Handle, Datum))
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
+    FString::Printf(TEXT("No Hit")));
+        return;
+    }
+
     if (!Datum.OutHits.Num())
-         return;
+    {
+                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
+        FString::Printf(TEXT("No OutHits In Datum")));
+                return;
+    }
+    
+    const FHitResult& Hit = Datum.OutHits[0];
 
-    const FHitResult& Hit = GetWorld()->QueryTraceData(Handle, Datum);
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.GetActor()->GetName());
+
+#if WITH_EDITOR
+    DrawDebugSphere(GetWorld(), Hit.Location, FeetShape.GetSphereRadius(),16, FColor::Green);
+#endif
         // Datum.OutHits[0];
     if (!UpdatedComponent)
         return;
@@ -142,11 +171,11 @@ void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Han
         FString::Printf(TEXT("Hit: %s at %s"), *Hit.GetActor()->GetName(), *Hit.Location.ToString()));
     
     // Calcul du slide : on glisse le long de la surface percutée
-    FVector Normal = Hit.Normal;
-    FVector DistanceAbs = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetAbs();
-    FVector Deflected = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetSafeNormal();
-
-    FVector NewLocation = (Hit.Location + Deflected) * (DistanceAbs).Size();
-    UpdatedComponent->SetWorldLocation(NewLocation);
+    // FVector Normal = Hit.Normal;
+    // FVector DistanceAbs = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetAbs();
+    // FVector Deflected = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetSafeNormal();
+    //
+    // FVector NewLocation = (Hit.Location + Deflected) * (DistanceAbs).Size();
+    // UpdatedComponent->SetWorldLocation(NewLocation);
 }
 
