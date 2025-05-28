@@ -30,5 +30,5 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 		void Save();
 		void Load();
 
-		static void GetAllSavableActors(TArray<ISavable*>& outSavable);
+		void GetAllSavableActors(TArray<TScriptInterface<ISavable>>& outSavable);
 };

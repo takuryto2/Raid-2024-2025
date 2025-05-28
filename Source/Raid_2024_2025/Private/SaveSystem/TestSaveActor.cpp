@@ -27,6 +27,8 @@ FSavedState* ATestSaveActor::GetState()
 	FSavedState* rv = new FSavedState();
 	rv->vectors.Add("pos", GetActorLocation());
 
+	UE_LOG(LogTemp, Warning, TEXT("ffs"));
+
 	return rv;
 }
 

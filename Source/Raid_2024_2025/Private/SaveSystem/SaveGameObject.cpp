@@ -3,33 +3,57 @@
 
 #include "SaveSystem/SaveGameObject.h"
 
-void USaveGameObject::GetAllSavableActors(TArray<ISavable*>& outSavable)
+
+
+
+
+
+
+
+
+
+void USaveGameObject::GetAllSavableActors(TArray<TScriptInterface<ISavable>>& outSavable)
 {
     TArray<AActor*> actors;
-	UGameplayStatics::GetAllActorsWithInterface(GWorld, USavable::StaticClass(), actors);
+    UGameplayStatics::GetAllActorsWithInterface(GetWorld(), USavable::StaticClass(), actors);
 
     for (AActor* actor : actors)
     {
-        if (!actor->Implements<USavable>())
-            continue;
-        
-        ISavable* savableActor = Cast<ISavable>(actor);
-
-        if (!savableActor)
-            continue;
-        
-        outSavable.Add(savableActor);
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, actor->GetName());
+        outSavable.Add(TScriptInterface<ISavable>(actor));
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void USaveGameObject::Save()
 {
-    TArray<ISavable*> savableActors;
-    USaveGameObject::GetAllSavableActors(savableActors);
+    TArray<TScriptInterface<ISavable>> savableActors;
+    GetAllSavableActors(savableActors);
 
-    for (ISavable* savableActor : savableActors)
+    for (const TScriptInterface<ISavable>& savableActor : savableActors)
     {
-        FString actorName = Cast<AActor>(savableActor)->GetFullName();
+        AActor* actor = Cast<AActor>(savableActor.GetObject());
+
+        if (!&actor)
+            continue;
+
+        FString actorName = actor->GetFullName();
         FSavedState* state = savableActor->GetState();
         objectToState.Add(actorName, *state);
     }
@@ -37,12 +61,17 @@ void USaveGameObject::Save()
 
 void USaveGameObject::Load()
 {
-    TArray<ISavable*> savableActors;
-    USaveGameObject::GetAllSavableActors(savableActors);
+    TArray<TScriptInterface<ISavable>> savableActors;
+    GetAllSavableActors(savableActors);
 
-    for (ISavable* savableActor : savableActors)
+    for (const TScriptInterface<ISavable>& savableActor : savableActors)
     {
-        FString actorName = Cast<AActor>(savableActor)->GetFullName();
+        AActor* actor = Cast<AActor>(savableActor.GetObject());
+
+        if (!&actor)
+            continue;
+
+        FString actorName = actor->GetFullName();
 
         if (objectToState.Contains(actorName))
         {

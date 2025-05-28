@@ -27,8 +27,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 
-
+	// UFUNCTION(BlueprintCallable, Category = "Save/Load")
 	virtual FSavedState* GetState() override;
+		
+	// UFUNCTION(BlueprintCallable, Category = "Save/Load")
 	virtual void SetState(FSavedState* state) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Save/Load")
