@@ -24,7 +24,7 @@ void UCharacterPawnMovementComponent::BeginPlay()
         halfHeight = Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
         CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
 
-        StepMult = 1.0f;
+        StepMult = 2.0f;
     }
 }
 
@@ -110,7 +110,7 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
 
     // GetOwner()->GetActorBounds(false, origin, boxExtent);
     
-    const FVector Start = UpdatedComponent->GetComponentLocation() + GetOwner()->GetActorUpVector() * -halfHeight;
+    const FVector Start = UpdatedComponent->GetComponentLocation() + (GetOwner()->GetActorUpVector() * -halfHeight);
     const FVector End = FVector(Start.X, Start.Y,Start.Z - CapsuleStep * StepMult) ;
 
     FQuat Rotation = UpdatedComponent->GetComponentQuat();
@@ -120,12 +120,12 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
 
     GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("PerformSlideAsyncTrace called"));
     DrawDebugSphere(GetWorld(), Start, FeetShape.GetSphereRadius(),16, FColor::Blue);
-    DrawDebugSphere(GetWorld(), End, FeetShape.GetSphereRadius(),16, FColor::Red);
+    DrawDebugSphere(GetWorld(), End, FeetShape.GetSphereRadius()/10,16, FColor::Red);
     GetWorld()->AsyncSweepByProfile(
         EAsyncTraceType::Single,
         Start,
         End,
-        FQuat::Identity,
+        Rotation,
         UCollisionProfile::Pawn_ProfileName,
         FeetShape,
         CollisionParams,
@@ -160,9 +160,7 @@ void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Han
 
     UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.GetActor()->GetName());
 
-#if WITH_EDITOR
     DrawDebugSphere(GetWorld(), Hit.Location, FeetShape.GetSphereRadius(),16, FColor::Green);
-#endif
         // Datum.OutHits[0];
     if (!UpdatedComponent)
         return;
