@@ -73,7 +73,7 @@ void ACharacterPawn::MoveCancelled()
 
 void ACharacterPawn::Jump()
 {
-	
+	MovementComponent->JumpInput();
 }
 
 void ACharacterPawn::Dash()
