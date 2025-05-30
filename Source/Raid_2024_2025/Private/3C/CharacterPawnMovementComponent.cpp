@@ -1,18 +1,15 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "3C/CharacterPawnMovementComponent.h"
-
-#include "MaterialHLSLTree.h"
+﻿#include "3C/CharacterPawnMovementComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Math/UnitConversion.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/World.h"
+#include "CollisionQueryParams.h"
+#include "GameFramework/Actor.h"
 
-// Sets default values for this component's properties
 UCharacterPawnMovementComponent::UCharacterPawnMovementComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 }
 
-// Called when the game starts
 void UCharacterPawnMovementComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -22,13 +19,11 @@ void UCharacterPawnMovementComponent::BeginPlay()
     {
         FeetShape = FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius() - FeetSkin);
         halfHeight = Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
-        CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
-
-        StepMult = 2.0f;
+        CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - halfHeight;
+        StepMult = 5.0f;
     }
 }
 
-// Called every frame
 void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -36,13 +31,13 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     if (DashCooldownTimer > 0.0f)
         DashCooldownTimer -= DeltaTime;
 
+    FVector Movement = FVector::ZeroVector;
+
     if (bIsDashing)
     {
         DashTimer -= DeltaTime;
         FVector2D MoveVector2 = DashSpeed * DeltaTime * DashDirection;
-        FVector MoveVector = FVector(0, MoveVector2.Y, MoveVector2.X);
-
-        UpdatedComponent->MoveComponent(MoveVector, FQuat::Identity, true);
+        Movement = FVector(0, MoveVector2.Y, MoveVector2.X);
 
         if (DashTimer <= 0.0f)
             bIsDashing = false;
@@ -55,22 +50,63 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
             WalkProgress = FMath::Clamp(WalkProgress, 0.f, 1.f);
 
             CurrentSpeed = SpeedCurve->GetFloatValue(WalkProgress) * VMax;
-
             FVector2D MoveVector2 = CurrentSpeed * DeltaTime * CurrentDirection;
-            FVector MoveVector = FVector(0, MoveVector2.Y, MoveVector2.X) ;
-            
-            UpdatedComponent->MoveComponent(MoveVector, FQuat::Identity, true);
-
-            // Collide and slide async trace
-            PerformSlideAsyncTrace(MoveVector);
+            Movement = FVector(0, MoveVector2.Y, 0);
         }
+    }
+
+    if (bIsJumping || !bIsGrounded)
+    {
+        VerticalSpeed += Gravity * DeltaTime;
+        Movement.Z = VerticalSpeed * DeltaTime;
+    }
+
+    FHitResult Hit;
+    SafeMoveUpdatedComponent(Movement, FQuat::Identity, true, Hit);
+
+    if (Hit.IsValidBlockingHit())
+    {
+        SlideAlongSurface(Movement, 1.f - Hit.Time, Hit.Normal, Hit, true);
+
+        const FVector Normal = Hit.Normal;
+        const float HitAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal, FVector::UpVector)));
+
+        if (HitAngle <= MaxGroundAngle)
+        {
+            bIsJumping = false;
+            bIsGrounded = true;
+            VerticalSpeed = 0.f;
+        }
+        else
+        {
+            bIsGrounded = false;
+
+            const FVector SlideDir = FVector::VectorPlaneProject(FVector::DownVector, Hit.Normal).GetSafeNormal();
+            Movement += SlideDir * SlopeSlideSpeed * DeltaTime;
+
+            FHitResult SlideHit;
+            SafeMoveUpdatedComponent(SlideDir * SlopeSlideSpeed * DeltaTime, FQuat::Identity, true, SlideHit);
+        }
+    }
+    else
+    {
+        bIsGrounded = false;
+    }
+
+    if (!Movement.IsNearlyZero())
+    {
+        PerformSlideAsyncTrace(Movement);
     }
 }
 
-
 void UCharacterPawnMovementComponent::JumpInput()
 {
-    
+    if (bIsGrounded)
+    {
+        bIsJumping = true;
+        bIsGrounded = false;
+        VerticalSpeed = JumpVelocity;
+    }
 }
 
 void UCharacterPawnMovementComponent::DashInput()
@@ -80,14 +116,7 @@ void UCharacterPawnMovementComponent::DashInput()
     {
         bIsDashing = true;
         DashTimer = DashTime;
-        if (CurrentDirection.IsZero())
-        {
-            DashDirection = FVector2D(0, 1);
-        }
-        else
-        {
-            DashDirection = CurrentDirection;
-        }
+        DashDirection = CurrentDirection.IsZero() ? FVector2D(0, 1) : CurrentDirection;
         DashCooldownTimer = DashCooldown + DashTime;
     }
     MoveInput(FVector2D(0, 0));
@@ -96,7 +125,14 @@ void UCharacterPawnMovementComponent::DashInput()
 
 void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
 {
-    CurrentDirection = Direction.GetSafeNormal();
+    FVector2D AdjustedDirection = Direction;
+
+    if (bIsGrounded && Direction.Y < -0.5f && FMath::Abs(Direction.X) > 0.1f)
+    {
+        AdjustedDirection.Y = 0;
+    }
+
+    CurrentDirection = AdjustedDirection.GetSafeNormal();
 }
 
 void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& MoveVector)
@@ -104,28 +140,18 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
     if (!GetWorld() || !UpdatedComponent)
         return;
 
-    
-    // FVector origin;
-    // FVector boxExtent;
-
-    // GetOwner()->GetActorBounds(false, origin, boxExtent);
-    
-    const FVector Start = UpdatedComponent->GetComponentLocation() + (GetOwner()->GetActorUpVector() * -halfHeight);
-    const FVector End = FVector(Start.X, Start.Y,Start.Z - CapsuleStep * StepMult) ;
-
-    FQuat Rotation = UpdatedComponent->GetComponentQuat();
+    const FVector Start = UpdatedComponent->GetComponentLocation() + GetOwner()->GetActorUpVector() * -halfHeight;
+    const FVector End = FVector(Start.X, Start.Y, Start.Z - CapsuleStep * StepMult);
 
     FTraceDelegate LocalDelegate;
     LocalDelegate.BindUObject(this, &UCharacterPawnMovementComponent::OnAsyncTraceResult);
 
-    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("PerformSlideAsyncTrace called"));
-    DrawDebugSphere(GetWorld(), Start, FeetShape.GetSphereRadius(),16, FColor::Blue);
-    DrawDebugSphere(GetWorld(), End, FeetShape.GetSphereRadius()/10,16, FColor::Red);
+    DrawDebugSphere(GetWorld(), Start, FeetShape.GetSphereRadius(), 16, FColor::Blue);
+    DrawDebugSphere(GetWorld(), End, FeetShape.GetSphereRadius() / 10, 16, FColor::Red);
+
     GetWorld()->AsyncSweepByProfile(
         EAsyncTraceType::Single,
-        Start,
-        End,
-        Rotation,
+        Start, End, FQuat::Identity,
         UCollisionProfile::Pawn_ProfileName,
         FeetShape,
         CollisionParams,
@@ -135,45 +161,11 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
 
 void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Handle, FTraceDatum& Datum)
 {
-    // GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("OnAsyncTraceResult called"));
-    //
-    // GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
-    //     FString::Printf(TEXT("Async Trace Result: %d hits"), Datum.OutHits.Num()));
-
-    
-
-    if(!GetWorld()->GetWorld()->QueryTraceData(Handle, Datum))
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
-    FString::Printf(TEXT("No Hit")));
+    if (!GetWorld()->GetWorld()->QueryTraceData(Handle, Datum) || Datum.OutHits.IsEmpty())
         return;
-    }
 
-    if (!Datum.OutHits.Num())
-    {
-                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red,
-        FString::Printf(TEXT("No OutHits In Datum")));
-                return;
-    }
-    
     const FHitResult& Hit = Datum.OutHits[0];
-
-    UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.GetActor()->GetName());
-
-    DrawDebugSphere(GetWorld(), Hit.Location, FeetShape.GetSphereRadius(),16, FColor::Green);
-        // Datum.OutHits[0];
-    if (!UpdatedComponent)
-        return;
-
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
-        FString::Printf(TEXT("Hit: %s at %s"), *Hit.GetActor()->GetName(), *Hit.Location.ToString()));
-    
-    // Calcul du slide : on glisse le long de la surface percutée
-    // FVector Normal = Hit.Normal;
-    // FVector DistanceAbs = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetAbs();
-    // FVector Deflected = FVector::VectorPlaneProject(Hit.TraceEnd - Hit.TraceStart, Normal).GetSafeNormal();
-    //
-    // FVector NewLocation = (Hit.Location + Deflected) * (DistanceAbs).Size();
-    // UpdatedComponent->SetWorldLocation(NewLocation);
+    #if WITH_EDITOR
+    DrawDebugSphere(GetWorld(), Hit.Location, FeetShape.GetSphereRadius(), 16, FColor::Green);
+    #endif
 }
-
