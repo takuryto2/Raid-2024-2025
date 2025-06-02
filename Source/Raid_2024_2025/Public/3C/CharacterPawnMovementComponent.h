@@ -37,10 +37,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float FeetSkin = 1;
 
+#pragma region Slope Slide
+	UPROPERTY(EditDefaultsOnly, Category = "Movement|Slope")
+	float MaxGroundAngle = 45.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Movement|Slope")
+	float SlopeSlideSpeed = 600.f;
+#pragma endregion
+
 private:
 	FVector2D CurrentDirection;
 	float WalkProgress = 0;
 	bool bCanMove = true;
+	bool CheckIfGrounded();
 
 #pragma region Dash
 	UPROPERTY(EditDefaultsOnly, Category="Movement|Dash")
@@ -73,13 +82,5 @@ private:
 	float VerticalSpeed = 0.f;
 	float Gravity = -2000.f;
 	bool bIsGrounded = true;
-#pragma endregion
-
-#pragma region Slope Slide
-	UPROPERTY(EditDefaultsOnly, Category = "Movement|Slope")
-	float MaxGroundAngle = 45.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Movement|Slope")
-	float SlopeSlideSpeed = 600.f;
 #pragma endregion
 };
