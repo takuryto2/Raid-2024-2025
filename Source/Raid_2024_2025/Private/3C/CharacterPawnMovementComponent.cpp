@@ -36,7 +36,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     bIsGrounded = CheckIfGrounded();
 
     // Gravité
-    const float GravityForce = (Mass*2) * Gravity;
+    const float GravityForce = (Mass*2) * Gravity; //Si je mets pas la mass *2 c'est trop léger
     const float GravityAcceleration = GravityForce / Mass;
     VerticalSpeed += GravityAcceleration * DeltaTime;
 
