@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Savable.h"
+#include "SavableState.h"
 #include "SavedState.h"
 #include "CoreMinimal.h"
 #include "Containers/Map.h"
@@ -31,10 +32,10 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 		USaveGameObject();
 
 		UFUNCTION(BlueprintCallable, Category = "Save/Load")
-		void Save(const UObject* worldContextObject);
+		void Save(UObject* worldContextObject);
 
 		UFUNCTION(BlueprintCallable, Category = "Save/Load")
-		void Load(const UObject* worldContextObject);
+		void Load(UObject* worldContextObject);
 
 		void GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable);
 };

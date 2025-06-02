@@ -13,7 +13,7 @@ void USaveGameObject::GetAllSavableActors(const UWorld* world, TArray<AActor*>& 
     UGameplayStatics::GetAllActorsWithInterface(world, USavable::StaticClass(), outSavable);
 }
 
-void USaveGameObject::Save(const UObject* worldContextObject)
+void USaveGameObject::Save(UObject* worldContextObject)
 {
     const UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
 
@@ -24,25 +24,30 @@ void USaveGameObject::Save(const UObject* worldContextObject)
 
     for (AActor* savableActor : savableActors)
     {
-        FString actorName = savableActor->GetFullName();
-        LOG("%s", *actorName)
-        
-        FSavedState state = Cast<ISavable>(savableActor)->GetState();
-        
-        state.objectType = savableActor->GetClass();
-        state.objectName = actorName;
+        FString fullName = savableActor->GetFullName();
 
-        objectToState.Add(actorName, state);
+        FSavedState state;
+        if (ISavableState* getState = Cast<ISavableState>(savableActor))
+            state = getState->GetState();
+
+        state.objectType      = savableActor->GetClass();
+        state.objectTransform = savableActor->GetTransform();
+
+        state.strings[FSavedState::NAME]     = savableActor->GetName(); 
+        state.strings[FSavedState::FULLNAME] = fullName; 
+        state.ints[FSavedState::RECREATE]    = Cast<ISavable>(savableActor)->recreate ? 1 : 0;
+
+        objectToState.Add(fullName, state);
 
         state.Log();
     }
 }
 
-void USaveGameObject::Load(const UObject* worldContextObject)
+void USaveGameObject::Load(UObject* worldContextObject)
 {
     LOG("LOADING")
 
-    const UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
+    UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
 
     TArray<AActor*> savableActors;
     GetAllSavableActors(world, savableActors);
@@ -55,38 +60,48 @@ void USaveGameObject::Load(const UObject* worldContextObject)
 
     for (AActor* savableActor : savableActors)
     {
-        FString actorName = savableActor->GetFullName();
+        FString fullName = savableActor->GetFullName();
 
-        LOG("Savable actor found: %s", *actorName)
+        LOG("Savable actor found: %s", *fullName)
 
-        if (objectToState.Contains(actorName))
+        if (objectToState.Contains(fullName))
         {
-            LOG("Loading Actor: %s", *actorName)
-            Cast<ISavable>(savableActor)->SetState(objectToState[actorName]);
-            objectToState.Remove(actorName);
+            LOG("Loading Actor: %s", *fullName)
+
+            savableActor->SetActorTransform(objectToState[fullName].objectTransform);
+
+            if (ISavableState* setState = Cast<ISavableState>(savableActor))
+                setState->SetState(objectToState[fullName]);
+
+            objectToState.Remove(fullName);
         }
     }
 
-    // ULevel* level = world->GetCurrentLevel();
+    ULevel* level = world->GetCurrentLevel();
 
-    // TArray<FString> toRemove;
+    TArray<FString> toRemove;
 
-    // for (TPair<FString, FSavedState>& Pair : objectToState)
-    // {
-    //     if (!Pair.Value.recreateIfNotPresent)
-    //         continue;
+    for (TPair<FString, FSavedState>& Pair : objectToState)
+    {
+        if (!Pair.Value.ints[FSavedState::RECREATE])
+            continue;
         
-    //     LOG("Recreating Actor: %s", *Pair.Key)
+        LOG("Recreating Actor %s of type %s", *Pair.Key, *Pair.Value.objectType->GetName())
 
-    //     // assume each actor has the level as its outer
-    //     AActor* spawned = NewObject<AActor>(level, Pair.Value.objectType, FName(Pair.Value.objectName));
-    //     Cast<ISavable>(spawned)->SetState(Pair.Value);
+        FActorSpawnParameters spawnParams;
+        spawnParams.Name = FName(Pair.Value.strings[FSavedState::NAME]);
+        spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    //     toRemove.Add(Pair.Key);
-    // }
+        AActor* spawned = world->SpawnActor<AActor>(Pair.Value.objectType, Pair.Value.objectTransform, spawnParams);
 
-    // for (const FString& Key : toRemove)
-    //     objectToState.Remove(Key);
+        if (ISavableState* setStateOnSpawned = Cast<ISavableState>(spawned))
+            setStateOnSpawned->SetState(Pair.Value);
+
+        toRemove.Add(Pair.Key);
+    }
+
+    for (const FString& Key : toRemove)
+        objectToState.Remove(Key);
     
     // do something with the remaining data, perhaps?
 }

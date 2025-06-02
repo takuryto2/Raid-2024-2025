@@ -26,21 +26,24 @@ struct FSavedState
         UPROPERTY()
 		TMap<FString, FVector> vectors;
 
-        // if True and that the object is not found upon a load,
-        // will recreate this object
-        UPROPERTY()
-        bool recreateIfNotPresent;
-
         // set by the save object
         UPROPERTY()
         UClass* objectType;
 
         UPROPERTY()
-        FString objectName;
+        FTransform objectTransform;
+    
+    // special key for `ints`, set by the save object
+    // if the value is 1 and that the object is not in the world when loading a scene, will respawn this object
+    static const FString RECREATE;
+
+    static const FString NAME;
+    static const FString FULLNAME;
 	
 	FString ToString() const
     {
-        FString rv = FString::Format(TEXT("State of object '{0}' ({1})"), {*objectName, *objectType->GetName()});
+        FString name = strings.Contains(NAME) ? strings[NAME] : TEXT("unknown");
+        FString rv = FString::Format(TEXT("State of object '{0}' ({1})"), {*name, *objectType->GetName()});
 
         rv += TEXT("\n    Strings:\n");
         for (const TPair<FString, FString>& Pair : strings)
@@ -73,5 +76,4 @@ struct FSavedState
 	{
 		UE_LOG(LogTemp, Log, TEXT("%s"), *ToString())
 	}
-
 };

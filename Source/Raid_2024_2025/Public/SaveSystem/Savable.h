@@ -21,9 +21,5 @@ class RAID_2024_2025_API ISavable
 	GENERATED_BODY()
 
 	public:
-		// UFUNCTION(BlueprintCallable, Category = "Save/Load")
-		virtual FSavedState GetState() = 0;
-
-		// UFUNCTION(BlueprintCallable, Category = "Save/Load")
-		virtual void SetState(const FSavedState& state) = 0;
+		bool recreate = true;
 };

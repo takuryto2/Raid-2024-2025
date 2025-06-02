@@ -21,16 +21,3 @@ void ATestSaveActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-
-FSavedState ATestSaveActor::GetState()
-{
-	FSavedState rv;
-	rv.vectors.Add("pos", GetActorLocation());
-
-	return rv;
-}
-
-void ATestSaveActor::SetState(const FSavedState& state)
-{
-	SetActorLocation(state.vectors["pos"]);
-}
