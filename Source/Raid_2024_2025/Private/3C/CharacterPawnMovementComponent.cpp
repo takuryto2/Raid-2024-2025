@@ -20,7 +20,7 @@ void UCharacterPawnMovementComponent::BeginPlay()
         FeetShape = FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius() - FeetSkin);
         halfHeight = Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
         CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - halfHeight;
-        StepMult = 5.0f;
+        StepMult = 2.f;
     }
 }
 
@@ -67,30 +67,15 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     if (Hit.IsValidBlockingHit())
     {
         SlideAlongSurface(Movement, 1.f - Hit.Time, Hit.Normal, Hit, true);
-
-        const FVector Normal = Hit.Normal;
-        const float HitAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal, FVector::UpVector)));
-
-        if (HitAngle <= MaxGroundAngle)
-        {
-            bIsJumping = false;
-            bIsGrounded = true;
-            VerticalSpeed = 0.f;
-        }
-        else
-        {
-            bIsGrounded = false;
-
-            const FVector SlideDir = FVector::VectorPlaneProject(FVector::DownVector, Hit.Normal).GetSafeNormal();
-            Movement += SlideDir * SlopeSlideSpeed * DeltaTime;
-
-            FHitResult SlideHit;
-            SafeMoveUpdatedComponent(SlideDir * SlopeSlideSpeed * DeltaTime, FQuat::Identity, true, SlideHit);
-        }
     }
-    else
+
+    // Nouvelle vérification de sol (fiable même en mouvement)
+    bIsGrounded = CheckIfGrounded();
+
+    if (bIsGrounded && VerticalSpeed < 0.f)
     {
-        bIsGrounded = false;
+        VerticalSpeed = 0.f;
+        bIsJumping = false;
     }
 
     if (!Movement.IsNearlyZero())
@@ -165,7 +150,39 @@ void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Han
         return;
 
     const FHitResult& Hit = Datum.OutHits[0];
-    #if WITH_EDITOR
+#if WITH_EDITOR
     DrawDebugSphere(GetWorld(), Hit.Location, FeetShape.GetSphereRadius(), 16, FColor::Green);
-    #endif
+#endif
+}
+
+bool UCharacterPawnMovementComponent::CheckIfGrounded()
+{
+    if (!GetWorld() || !UpdatedComponent)
+        return false;
+
+    FVector Start = UpdatedComponent->GetComponentLocation();
+    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 1);
+
+    FHitResult GroundHit;
+    bool bHit = GetWorld()->SweepSingleByChannel(
+        GroundHit,
+        Start,
+        End,
+        FQuat::Identity,
+        ECC_Visibility,
+        FeetShape,
+        CollisionParams
+    );
+
+#if WITH_EDITOR
+    DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 0.1f, 0, 1.f);
+#endif
+
+    if (bHit)
+    {
+        float HitAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(GroundHit.Normal, FVector::UpVector)));
+        return HitAngle <= MaxGroundAngle;
+    }
+
+    return false;
 }
