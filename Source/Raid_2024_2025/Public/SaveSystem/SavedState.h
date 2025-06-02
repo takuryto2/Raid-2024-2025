@@ -14,16 +14,16 @@ struct FSavedState
     GENERATED_BODY()
 
 	public:
-        UPROPERTY()
+        UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FString, FString> strings;
 
-        UPROPERTY()
+        UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FString, int32>   ints;
 
-        UPROPERTY()
+        UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FString, float>   floats;
         
-        UPROPERTY()
+        UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FString, FVector> vectors;
 
         // set by the save object

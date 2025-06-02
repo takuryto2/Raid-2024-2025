@@ -7,6 +7,12 @@ ALWAYS_RECREATE(ASavableActor)
 DEFAULT_GETSTATE(ASavableActor)
 DEFAULT_SETSTATE(ASavableActor)
 
+FSavedState ASavableActor::GetNewState()
+{
+	FSavedState rv;
+	return rv;
+}
+
 // Sets default values
 ASavableActor::ASavableActor()
 {

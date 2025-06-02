@@ -18,6 +18,9 @@ public:
 	// Sets default values for this actor's properties
 	ASavableActor();
 
+	UFUNCTION(BlueprintCallable, Category = "Save System")
+	FSavedState GetNewState();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
