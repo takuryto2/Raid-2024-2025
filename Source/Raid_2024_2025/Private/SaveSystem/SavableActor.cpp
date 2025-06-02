@@ -4,6 +4,8 @@
 #include "SaveSystem/SavableActor.h"
 
 ALWAYS_RECREATE(ASavableActor)
+DEFAULT_GETSTATE(ASavableActor)
+DEFAULT_SETSTATE(ASavableActor)
 
 // Sets default values
 ASavableActor::ASavableActor()

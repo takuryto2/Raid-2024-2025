@@ -2,13 +2,15 @@
 
 #pragma once
 
+#include "SavedState.h"
+#include "SavableState.h"
 #include "Savable.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "SavableActor.generated.h"
 
 UCLASS()
-class RAID_2024_2025_API ASavableActor : public AActor, public ISavable
+class RAID_2024_2025_API ASavableActor : public AActor, public ISavable, public ISavableState
 {
 	GENERATED_BODY()
 	
@@ -23,5 +25,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	virtual bool Recreate_Implementation() override;
+	virtual bool ShouldRecreate_Implementation() override;
+
+	virtual FSavedState GetState_Implementation() override;
+	virtual void SetState_Implementation(const FSavedState& state) override;
 };

@@ -35,7 +35,7 @@ struct FSavedState
     
     // special key for `ints`, set by the save object
     // if the value is 1 and that the object is not in the world when loading a scene, will respawn this object
-    static const FString RECREATE;
+    static const FString SHOULD_RECREATE;
 
     static const FString NAME;
     static const FString FULLNAME;

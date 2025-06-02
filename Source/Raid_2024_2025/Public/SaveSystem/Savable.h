@@ -22,7 +22,7 @@ class RAID_2024_2025_API ISavable
 
 	public:
 		UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Save System")
-		bool Recreate();
+		bool ShouldRecreate();
 };
 
-#define ALWAYS_RECREATE(cls) bool cls::Recreate_Implementation() {return true;}
+#define ALWAYS_RECREATE(cls) bool cls::ShouldRecreate_Implementation() {return true;}

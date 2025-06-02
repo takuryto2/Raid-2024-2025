@@ -37,9 +37,9 @@ void USaveGameObject::Save(UObject* worldContextObject)
         state.objectType      = savableActor->GetClass();
         state.objectTransform = savableActor->GetTransform();
 
-        state.strings.Add(FSavedState::NAME, savableActor->GetName()); 
-        state.strings.Add(FSavedState::FULLNAME, fullName); 
-        state.ints.Add(FSavedState::RECREATE, ISavable::Execute_Recreate(savableActor) ? 1 : 0);
+        state.strings.Add(FSavedState::NAME,            savableActor->GetName()); 
+        state.strings.Add(FSavedState::FULLNAME,        fullName); 
+        state.ints.Add(   FSavedState::SHOULD_RECREATE, ISavable::Execute_ShouldRecreate(savableActor) ? 1 : 0);
 
         state.Log();
 
@@ -90,7 +90,7 @@ void USaveGameObject::Load(UObject* worldContextObject)
 
     for (TPair<FString, FSavedState>& Pair : objectToState)
     {
-        if (!Pair.Value.ints[FSavedState::RECREATE])
+        if (!Pair.Value.ints[FSavedState::SHOULD_RECREATE])
             continue;
         
         LOG("Recreating actor %s of type %s", *Pair.Key, *Pair.Value.objectType->GetName())

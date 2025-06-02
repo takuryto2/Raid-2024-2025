@@ -34,4 +34,4 @@ FSavedState cls::GetState_Implementation() \
 } 
 
 #define DEFAULT_SETSTATE(cls) \
-void cls::SetState_Implementation() { } 
+void cls::SetState_Implementation(const FSavedState& state) { } 
