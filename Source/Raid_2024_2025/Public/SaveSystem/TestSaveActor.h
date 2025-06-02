@@ -28,10 +28,10 @@ public:
 
 
 	// UFUNCTION(BlueprintCallable, Category = "Save/Load")
-	virtual FSavedState* GetState() override;
+	virtual FSavedState GetState() override;
 		
 	// UFUNCTION(BlueprintCallable, Category = "Save/Load")
-	virtual void SetState(FSavedState* state) override;
+	virtual void SetState(const FSavedState& state) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Save/Load")
 	void TestSave();

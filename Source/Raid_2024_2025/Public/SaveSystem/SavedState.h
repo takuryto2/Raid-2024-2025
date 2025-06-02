@@ -25,33 +25,45 @@ struct FSavedState
         
         UPROPERTY()
 		TMap<FString, FVector> vectors;
+
+        // if True and that the object is not found upon a load,
+        // will recreate this object
+        UPROPERTY()
+        bool recreateIfNotPresent;
+
+        // set by the save object
+        UPROPERTY()
+        UClass* objectType;
+
+        UPROPERTY()
+        FString objectName;
 	
 	FString ToString() const
     {
-        FString rv;
+        FString rv = FString::Format(TEXT("State of object '{0}' ({1})"), {*objectName, *objectType->GetName()});
 
-        rv += TEXT("\nStrings:\n");
+        rv += TEXT("\n    Strings:\n");
         for (const TPair<FString, FString>& Pair : strings)
         {
-            rv += FString::Printf(TEXT("  %s = \"%s\"\n"), *Pair.Key, *Pair.Value);
+            rv += FString::Printf(TEXT("        %s = \"%s\"\n"), *Pair.Key, *Pair.Value);
         }
 
-        rv += TEXT("\nInts:\n");
+        rv += TEXT("\n    Ints:\n");
         for (const TPair<FString, int32>& Pair : ints)
         {
-            rv += FString::Printf(TEXT("  %s = %d\n"), *Pair.Key, Pair.Value);
+            rv += FString::Printf(TEXT("        %s = %d\n"), *Pair.Key, Pair.Value);
         }
 
-        rv += TEXT("\nFloats:\n");
+        rv += TEXT("\n    Floats:\n");
         for (const TPair<FString, float>& Pair : floats)
         {
-            rv += FString::Printf(TEXT("  %s = %.2f\n"), *Pair.Key, Pair.Value);
+            rv += FString::Printf(TEXT("        %s = %.2f\n"), *Pair.Key, Pair.Value);
         }
 
-        rv += TEXT("\nVectors:\n");
+        rv += TEXT("\n    Vectors:\n");
         for (const TPair<FString, FVector>& Pair : vectors)
         {
-            rv += FString::Printf(TEXT("  %s = (X=%.2f, Y=%.2f, Z=%.2f)\n"), *Pair.Key, Pair.Value.X, Pair.Value.Y, Pair.Value.Z);
+            rv += FString::Printf(TEXT("        %s = (X=%.2f, Y=%.2f, Z=%.2f)\n"), *Pair.Key, Pair.Value.X, Pair.Value.Y, Pair.Value.Z);
         }
 
         return rv;

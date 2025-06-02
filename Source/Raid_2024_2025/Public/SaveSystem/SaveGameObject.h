@@ -17,18 +17,24 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 	GENERATED_BODY()
 
 	public:
-		UPROPERTY(VisibleAnywhere, Category = Basic)
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Basic)
 		FString slotName;
 
-		UPROPERTY(VisibleAnywhere, Category = Basic)
-		uint32  slotIndex;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Basic)
+		int32  slotIndex;
 	
+	private:
 		UPROPERTY()
 		TMap<FString, FSavedState> objectToState;
 
 	public:
-		void Save(const UWorld* world);
-		void Load(const UWorld* world);
+		USaveGameObject();
+
+		UFUNCTION(BlueprintCallable, meta = (WorldContextObject="world"), Category = "Save/Load")
+		void Save(UWorld* world);
+
+		UFUNCTION(BlueprintCallable, meta = (WorldContextObject="world"), Category = "Save/Load")
+		void Load(UWorld* world);
 
 		void GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable);
 };
