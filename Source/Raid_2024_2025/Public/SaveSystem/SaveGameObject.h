@@ -30,11 +30,11 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 	public:
 		USaveGameObject();
 
-		UFUNCTION(BlueprintCallable, meta = (WorldContextObject="world"), Category = "Save/Load")
-		void Save(UWorld* world);
+		UFUNCTION(BlueprintCallable, Category = "Save/Load")
+		void Save(const UObject* worldContextObject);
 
-		UFUNCTION(BlueprintCallable, meta = (WorldContextObject="world"), Category = "Save/Load")
-		void Load(UWorld* world);
+		UFUNCTION(BlueprintCallable, Category = "Save/Load")
+		void Load(const UObject* worldContextObject);
 
 		void GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable);
 };

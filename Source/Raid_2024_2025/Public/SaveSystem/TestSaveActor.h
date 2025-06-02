@@ -26,16 +26,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
-	// UFUNCTION(BlueprintCallable, Category = "Save/Load")
+	UFUNCTION(BlueprintCallable, Category = "Save/Load")
 	virtual FSavedState GetState() override;
 		
-	// UFUNCTION(BlueprintCallable, Category = "Save/Load")
+	UFUNCTION(BlueprintCallable, Category = "Save/Load")
 	virtual void SetState(const FSavedState& state) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Save/Load")
-	void TestSave();
-
-	UFUNCTION(BlueprintCallable, Category = "Save/Load")
-	void TestLoad();
 };

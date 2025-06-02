@@ -13,8 +13,10 @@ void USaveGameObject::GetAllSavableActors(const UWorld* world, TArray<AActor*>& 
     UGameplayStatics::GetAllActorsWithInterface(world, USavable::StaticClass(), outSavable);
 }
 
-void USaveGameObject::Save(UWorld* world)
+void USaveGameObject::Save(const UObject* worldContextObject)
 {
+    const UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
+
     LOG("SAVING")
 
     TArray<AActor*> savableActors;
@@ -22,7 +24,7 @@ void USaveGameObject::Save(UWorld* world)
 
     for (AActor* savableActor : savableActors)
     {
-        FString actorName = savableActor->GetName();
+        FString actorName = savableActor->GetFullName();
         LOG("%s", *actorName)
         
         FSavedState state = Cast<ISavable>(savableActor)->GetState();
@@ -36,9 +38,11 @@ void USaveGameObject::Save(UWorld* world)
     }
 }
 
-void USaveGameObject::Load(UWorld* world)
+void USaveGameObject::Load(const UObject* worldContextObject)
 {
     LOG("LOADING")
+
+    const UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
 
     TArray<AActor*> savableActors;
     GetAllSavableActors(world, savableActors);
@@ -52,6 +56,8 @@ void USaveGameObject::Load(UWorld* world)
     for (AActor* savableActor : savableActors)
     {
         FString actorName = savableActor->GetFullName();
+
+        LOG("Savable actor found: %s", *actorName)
 
         if (objectToState.Contains(actorName))
         {
