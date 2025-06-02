@@ -1,9 +1,8 @@
 ﻿#include "3C/CharacterPawnMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
-#include "Engine/World.h"
 #include "CollisionQueryParams.h"
-#include "GameFramework/Actor.h"
+#include "Engine/World.h"
 
 UCharacterPawnMovementComponent::UCharacterPawnMovementComponent()
 {
@@ -15,6 +14,7 @@ void UCharacterPawnMovementComponent::BeginPlay()
     Super::BeginPlay();
 
     CollisionParams = FCollisionQueryParams(FName(TEXT("FeetTrace")), false, GetOwner());
+
     if (UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(UpdatedComponent))
     {
         FeetShape = FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius() - FeetSkin);
@@ -28,37 +28,56 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (DashCooldownTimer > 0.0f)
+    if (DashCooldownTimer > 0.f)
         DashCooldownTimer -= DeltaTime;
 
     FVector Movement = FVector::ZeroVector;
 
+    bIsGrounded = CheckIfGrounded();
+
+    // Gravité
+    const float GravityForce = (Mass*2) * Gravity;
+    const float GravityAcceleration = GravityForce / Mass;
+    VerticalSpeed += GravityAcceleration * DeltaTime;
+
+    // Dash
     if (bIsDashing)
     {
-        DashTimer -= DeltaTime;
-        FVector2D MoveVector2 = DashSpeed * DeltaTime * DashDirection;
-        Movement = FVector(0, MoveVector2.Y, MoveVector2.X);
+        DashTimer += DeltaTime;
+        float Alpha = FMath::Clamp(DashTimer / DashDuration, 0.f, 1.f);
 
-        if (DashTimer <= 0.0f)
-            bIsDashing = false;
-    }
-    else if (!CurrentDirection.IsNearlyZero())
-    {
-        if (bCanMove)
+        if (DashCurve)
         {
-            WalkProgress += DeltaTime / AccelTime;
-            WalkProgress = FMath::Clamp(WalkProgress, 0.f, 1.f);
+            float DashScale = DashCurve->GetFloatValue(Alpha);
+            FVector2D MoveVec = DashDirection * DashDistance * DashScale;
+            Movement += FVector(0, MoveVec.Y, MoveVec.X);
+        }
 
-            CurrentSpeed = SpeedCurve->GetFloatValue(WalkProgress) * VMax;
-            FVector2D MoveVector2 = CurrentSpeed * DeltaTime * CurrentDirection;
-            Movement = FVector(0, MoveVector2.Y, 0);
+        Movement.Z += VerticalSpeed * DeltaTime;
+
+        if (Alpha >= 1.f)
+        {
+            bIsDashing = false;
+            bCanMove = true;
+            DashTimer = 0.f;
         }
     }
-
-    if (bIsJumping || !bIsGrounded)
+    // Déplacement normal
+    else if (!CurrentDirection.IsNearlyZero() && bCanMove)
     {
-        VerticalSpeed += Gravity * DeltaTime;
-        Movement.Z = VerticalSpeed * DeltaTime;
+        WalkProgress += DeltaTime / AccelTime;
+        WalkProgress = FMath::Clamp(WalkProgress, 0.f, 1.f);
+
+        float SpeedScale = SpeedCurve ? SpeedCurve->GetFloatValue(WalkProgress) : 1.f;
+        CurrentSpeed = SpeedScale * VMax;
+        FVector2D MoveVec = CurrentSpeed * DeltaTime * CurrentDirection;
+        Movement += FVector(0, MoveVec.Y, 0);
+    }
+
+    // Appliquer gravité même hors dash
+    if (!bIsGrounded || bIsJumping)
+    {
+        Movement.Z += VerticalSpeed * DeltaTime;
     }
 
     FHitResult Hit;
@@ -69,9 +88,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         SlideAlongSurface(Movement, 1.f - Hit.Time, Hit.Normal, Hit, true);
     }
 
-    // Nouvelle vérification de sol (fiable même en mouvement)
-    bIsGrounded = CheckIfGrounded();
-
+    // Atterrissage
     if (bIsGrounded && VerticalSpeed < 0.f)
     {
         VerticalSpeed = 0.f;
@@ -80,13 +97,13 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     if (!Movement.IsNearlyZero())
     {
-        PerformSlideAsyncTrace(Movement);
+        PerformSlideAsyncTrace();
     }
 }
 
 void UCharacterPawnMovementComponent::JumpInput()
 {
-    if (bIsGrounded)
+    if (CheckIfGrounded())
     {
         bIsJumping = true;
         bIsGrounded = false;
@@ -96,31 +113,22 @@ void UCharacterPawnMovementComponent::JumpInput()
 
 void UCharacterPawnMovementComponent::DashInput()
 {
-    bCanMove = false;
-    if (!bIsDashing && DashCooldownTimer <= 0.0f)
+    if (!bIsDashing && DashCooldownTimer <= 0.f)
     {
+        bCanMove = false;
         bIsDashing = true;
-        DashTimer = DashTime;
-        DashDirection = CurrentDirection.IsZero() ? FVector2D(0, 1) : CurrentDirection;
-        DashCooldownTimer = DashCooldown + DashTime;
+        DashTimer = 0.f;
+        DashDirection = CurrentDirection.IsZero() ? FVector2D(0, 1) : CurrentDirection.GetSafeNormal();
+        DashCooldownTimer = DashCooldown + DashDuration;
     }
-    MoveInput(FVector2D(0, 0));
-    bCanMove = true;
 }
 
 void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
 {
-    FVector2D AdjustedDirection = Direction;
-
-    if (bIsGrounded && Direction.Y < -0.5f && FMath::Abs(Direction.X) > 0.1f)
-    {
-        AdjustedDirection.Y = 0;
-    }
-
-    CurrentDirection = AdjustedDirection.GetSafeNormal();
+    CurrentDirection = Direction;
 }
 
-void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& MoveVector)
+void UCharacterPawnMovementComponent::PerformSlideAsyncTrace()
 {
     if (!GetWorld() || !UpdatedComponent)
         return;
@@ -146,7 +154,7 @@ void UCharacterPawnMovementComponent::PerformSlideAsyncTrace(const FVector& Move
 
 void UCharacterPawnMovementComponent::OnAsyncTraceResult(const FTraceHandle& Handle, FTraceDatum& Datum)
 {
-    if (!GetWorld()->GetWorld()->QueryTraceData(Handle, Datum) || Datum.OutHits.IsEmpty())
+    if (!GetWorld()->QueryTraceData(Handle, Datum) || Datum.OutHits.IsEmpty())
         return;
 
     const FHitResult& Hit = Datum.OutHits[0];
