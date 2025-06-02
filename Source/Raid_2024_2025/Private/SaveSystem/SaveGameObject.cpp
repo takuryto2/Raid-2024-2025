@@ -37,9 +37,9 @@ void USaveGameObject::Save(UObject* worldContextObject)
         state.objectType      = savableActor->GetClass();
         state.objectTransform = savableActor->GetTransform();
 
-        state.strings[FSavedState::NAME]     = savableActor->GetName(); 
-        state.strings[FSavedState::FULLNAME] = fullName; 
-        state.ints[FSavedState::RECREATE]    = ISavable::Execute_Recreate(savableActor) ? 1 : 0;
+        state.strings.Add(FSavedState::NAME, savableActor->GetName()); 
+        state.strings.Add(FSavedState::FULLNAME, fullName); 
+        state.ints.Add(FSavedState::RECREATE, ISavable::Execute_Recreate(savableActor) ? 1 : 0);
 
         state.Log();
 
