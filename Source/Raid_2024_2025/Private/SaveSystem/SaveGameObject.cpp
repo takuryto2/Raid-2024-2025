@@ -25,21 +25,25 @@ void USaveGameObject::Save(UObject* worldContextObject)
     for (AActor* savableActor : savableActors)
     {
         FString fullName = savableActor->GetFullName();
+        LOG("Savable actor found: %s", *fullName)
 
         FSavedState state;
-        if (ISavableState* getState = Cast<ISavableState>(savableActor))
-            state = getState->GetState();
+        if (savableActor->Implements<USavableState>())
+        {
+            state = ISavableState::Execute_GetState(savableActor);
+            LOG("Saving state of actor %s", *fullName)
+        }
 
         state.objectType      = savableActor->GetClass();
         state.objectTransform = savableActor->GetTransform();
 
         state.strings[FSavedState::NAME]     = savableActor->GetName(); 
         state.strings[FSavedState::FULLNAME] = fullName; 
-        state.ints[FSavedState::RECREATE]    = Cast<ISavable>(savableActor)->recreate ? 1 : 0;
-
-        objectToState.Add(fullName, state);
+        state.ints[FSavedState::RECREATE]    = ISavable::Execute_Recreate(savableActor) ? 1 : 0;
 
         state.Log();
+
+        objectToState.Add(fullName, state);
     }
 }
 
@@ -57,21 +61,24 @@ void USaveGameObject::Load(UObject* worldContextObject)
         LOG("Saved Actor: %s", *Pair.Key)
         Pair.Value.Log();
     }
+    LOG("=================================")
 
     for (AActor* savableActor : savableActors)
     {
         FString fullName = savableActor->GetFullName();
-
         LOG("Savable actor found: %s", *fullName)
 
         if (objectToState.Contains(fullName))
         {
-            LOG("Loading Actor: %s", *fullName)
+            LOG("Loading actor: %s", *fullName)
 
             savableActor->SetActorTransform(objectToState[fullName].objectTransform);
 
-            if (ISavableState* setState = Cast<ISavableState>(savableActor))
-                setState->SetState(objectToState[fullName]);
+            if (savableActor->Implements<USavableState>())
+            {
+                ISavableState::Execute_SetState(savableActor, objectToState[fullName]);
+                LOG("Setting state of actor %s", *fullName)
+            }
 
             objectToState.Remove(fullName);
         }
@@ -86,7 +93,7 @@ void USaveGameObject::Load(UObject* worldContextObject)
         if (!Pair.Value.ints[FSavedState::RECREATE])
             continue;
         
-        LOG("Recreating Actor %s of type %s", *Pair.Key, *Pair.Value.objectType->GetName())
+        LOG("Recreating actor %s of type %s", *Pair.Key, *Pair.Value.objectType->GetName())
 
         FActorSpawnParameters spawnParams;
         spawnParams.Name = FName(Pair.Value.strings[FSavedState::NAME]);
@@ -94,8 +101,11 @@ void USaveGameObject::Load(UObject* worldContextObject)
 
         AActor* spawned = world->SpawnActor<AActor>(Pair.Value.objectType, Pair.Value.objectTransform, spawnParams);
 
-        if (ISavableState* setStateOnSpawned = Cast<ISavableState>(spawned))
-            setStateOnSpawned->SetState(Pair.Value);
+        if (spawned->Implements<USavableState>())
+        {
+            ISavableState::Execute_SetState(spawned, Pair.Value);
+            LOG("Setting state of recreated actor %s", *Pair.Value.strings[FSavedState::FULLNAME])
+        }
 
         toRemove.Add(Pair.Key);
     }

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "SavedState.h"
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "SavableState.generated.h"
@@ -18,9 +19,19 @@ class RAID_2024_2025_API ISavableState
 	GENERATED_BODY()
 
 	public:
-		// UFUNCTION(BlueprintCallable, Category = "Save/Load")
-		virtual FSavedState GetState() = 0;
+		UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Save System")
+		FSavedState GetState();
 
-		// UFUNCTION(BlueprintCallable, Category = "Save/Load")
-		virtual void SetState(const FSavedState& state) = 0;
+		UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Save System")
+		void SetState(const FSavedState& state);
 };
+
+#define DEFAULT_GETSTATE(cls) \
+FSavedState cls::GetState_Implementation() \
+{ \
+    FSavedState state; \
+    return state; \
+} 
+
+#define DEFAULT_SETSTATE(cls) \
+void cls::SetState_Implementation() { } 

@@ -21,5 +21,8 @@ class RAID_2024_2025_API ISavable
 	GENERATED_BODY()
 
 	public:
-		bool recreate = true;
+		UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Save System")
+		bool Recreate();
 };
+
+#define ALWAYS_RECREATE(cls) bool cls::Recreate_Implementation() {return true;}

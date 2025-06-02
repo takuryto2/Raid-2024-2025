@@ -22,7 +22,7 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 		FString slotName;
 
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Basic)
-		int32  slotIndex;
+		int32 slotIndex;
 	
 	private:
 		UPROPERTY()
@@ -31,10 +31,10 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 	public:
 		USaveGameObject();
 
-		UFUNCTION(BlueprintCallable, Category = "Save/Load")
+		UFUNCTION(BlueprintCallable, Category = "Save System")
 		void Save(UObject* worldContextObject);
 
-		UFUNCTION(BlueprintCallable, Category = "Save/Load")
+		UFUNCTION(BlueprintCallable, Category = "Save System")
 		void Load(UObject* worldContextObject);
 
 		void GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable);
