@@ -31,12 +31,22 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     if (DashCooldownTimer > 0.f)
         DashCooldownTimer -= DeltaTime;
 
+    if (JumpBufferTimer > 0.f)
+        JumpBufferTimer -= DeltaTime;
+
     FVector Movement = FVector::ZeroVector;
 
     bIsGrounded = CheckIfGrounded();
 
+    // Saut depuis le buffer si on vient d'atterrir
+    if (bIsGrounded && JumpBufferTimer > 0.f && VerticalSpeed <= 0.f)
+    {
+        VerticalSpeed = JumpVelocity;
+        JumpBufferTimer = 0.f;
+    }
+
     // Gravité
-    const float GravityForce = (Mass*2) * Gravity; //Si je mets pas la mass *2 c'est trop léger
+    const float GravityForce = (Mass * 2) * Gravity;
     const float GravityAcceleration = GravityForce / Mass;
     VerticalSpeed += GravityAcceleration * DeltaTime;
 
@@ -74,8 +84,8 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         Movement += FVector(0, MoveVec.Y, 0);
     }
 
-    // Appliquer gravité même hors dash
-    if (!bIsGrounded || bIsJumping)
+    // Appliquer gravité
+    if (!bIsGrounded || VerticalSpeed > 0.f)
     {
         Movement.Z += VerticalSpeed * DeltaTime;
     }
@@ -92,7 +102,6 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     if (bIsGrounded && VerticalSpeed < 0.f)
     {
         VerticalSpeed = 0.f;
-        bIsJumping = false;
     }
 
     if (!Movement.IsNearlyZero())
@@ -103,12 +112,8 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
 void UCharacterPawnMovementComponent::JumpInput()
 {
-    if (CheckIfGrounded())
-    {
-        bIsJumping = true;
-        bIsGrounded = false;
-        VerticalSpeed = JumpVelocity;
-    }
+    // Active un buffer pour un saut dès qu’on est au sol
+    JumpBufferTimer = JumpBufferDuration;
 }
 
 void UCharacterPawnMovementComponent::DashInput()

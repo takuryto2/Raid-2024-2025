@@ -51,7 +51,11 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Jump")
     float JumpVelocity = 600.f;
 
-    bool bIsJumping = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+    float JumpBufferDuration = 0.2f;
+
+    float JumpBufferTimer = 0.f;
+    
     float VerticalSpeed = 0.f;
     bool bIsGrounded = true;
 
