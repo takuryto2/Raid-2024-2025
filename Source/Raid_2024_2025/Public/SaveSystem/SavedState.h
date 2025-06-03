@@ -8,23 +8,35 @@
 
 #define LOG(what, ...) UE_LOG(LogTemp, Log, TEXT(what), ##__VA_ARGS__)
 
+#define SAVABLE_DATA \
+UPROPERTY(EditAnywhere, BlueprintReadWrite) \
+TMap<FString, FString> strings; \
+UPROPERTY(EditAnywhere, BlueprintReadWrite) \
+TMap<FString, int32>   ints; \
+UPROPERTY(EditAnywhere, BlueprintReadWrite) \
+TMap<FString, double>   doubles; \
+UPROPERTY(EditAnywhere, BlueprintReadWrite) \
+TMap<FString, FVector> vectors;
+
 USTRUCT(Blueprintable, BlueprintType)
 struct FSavedState
 {
     GENERATED_BODY()
 
 	public:
-        UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<FString, FString> strings;
+        // SAVABLE_DATA
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<FString, int32>   ints;
+        TMap<FString, FString> strings;
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<FString, float>   floats;
+        TMap<FString, int32>   ints;
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        TMap<FString, double>   doubles;
         
         UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<FString, FVector> vectors;
+        TMap<FString, FVector> vectors;
 
         // set by the save object
         UPROPERTY()
@@ -57,8 +69,8 @@ struct FSavedState
             rv += FString::Printf(TEXT("        %s = %d\n"), *Pair.Key, Pair.Value);
         }
 
-        rv += TEXT("\n    Floats:\n");
-        for (const TPair<FString, float>& Pair : floats)
+        rv += TEXT("\n    Doubles:\n");
+        for (const TPair<FString, float>& Pair : doubles)
         {
             rv += FString::Printf(TEXT("        %s = %.2f\n"), *Pair.Key, Pair.Value);
         }
