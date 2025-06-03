@@ -22,7 +22,24 @@ void USaveGameObject::Save(UObject* worldContextObject)
     TArray<AActor*> savableActors;
     GetAllSavableActors(world, savableActors);
 
-    for (AActor* savableActor : savableActors)
+    SaveObjects(savableActors, worldContextObject);
+}
+
+void USaveGameObject::Load(UObject* worldContextObject)
+{
+    LOG("LOADING")
+
+    UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
+
+    TArray<AActor*> savableActors;
+    GetAllSavableActors(world, savableActors);
+
+    LoadObjects(savableActors, worldContextObject);
+}
+
+void USaveGameObject::SaveObjects(const TArray<AActor*> actors, UObject* worldContextObject)
+{
+    for (AActor* savableActor : actors)
     {
         FString fullName = savableActor->GetFullName();
         LOG("Savable actor found: %s", *fullName)
@@ -47,14 +64,9 @@ void USaveGameObject::Save(UObject* worldContextObject)
     }
 }
 
-void USaveGameObject::Load(UObject* worldContextObject)
+void USaveGameObject::LoadObjects(const TArray<AActor*> actors, UObject* worldContextObject)
 {
-    LOG("LOADING")
-
     UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject, EGetWorldErrorMode::Assert);
-
-    TArray<AActor*> savableActors;
-    GetAllSavableActors(world, savableActors);
 
     for (TPair<FString, FSavedState>& Pair : objectToState)
     {
@@ -63,7 +75,7 @@ void USaveGameObject::Load(UObject* worldContextObject)
     }
     LOG("=================================")
 
-    for (AActor* savableActor : savableActors)
+    for (AActor* savableActor : actors)
     {
         FString fullName = savableActor->GetFullName();
         LOG("Savable actor found: %s", *fullName)
