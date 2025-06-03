@@ -50,8 +50,7 @@ protected:
     // Saut
     UPROPERTY(EditDefaultsOnly, Category = "Jump")
     float JumpVelocity = 600.f;
-
-    bool bIsJumping = false;
+    
     float VerticalSpeed = 0.f;
     bool bIsGrounded = true;
 

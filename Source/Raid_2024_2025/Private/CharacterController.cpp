@@ -33,18 +33,18 @@ void ACharacterController::Dash(FVector2D ActionVector2)
         return;
 
     CanDash = false;
-    float tempDashForce = DashForce;
+    float TempDashForce;
 
     if (ActionVector2 < FVector2D::ZeroVector)
     {
-        tempDashForce = -DashForce;
+        TempDashForce = -DashForce;
     }
     else
     {
-        tempDashForce = DashForce;
+        TempDashForce = DashForce;
     }
 
-    FVector DashDirection = FVector(ActionVector2, 0.f) * tempDashForce;
+    FVector DashDirection = FVector(ActionVector2, 0.f) * TempDashForce;
 
     // Vérifie si le personnage est en l'air
     if (!GetCharacterMovement()->IsMovingOnGround())

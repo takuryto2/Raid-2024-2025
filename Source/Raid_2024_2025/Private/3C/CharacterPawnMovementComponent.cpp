@@ -75,7 +75,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     }
 
     // Appliquer gravité même hors dash
-    if (!bIsGrounded || bIsJumping)
+    if (!bIsGrounded)
     {
         Movement.Z += VerticalSpeed * DeltaTime;
     }
@@ -92,7 +92,6 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     if (bIsGrounded && VerticalSpeed < 0.f)
     {
         VerticalSpeed = 0.f;
-        bIsJumping = false;
     }
 
     if (!Movement.IsNearlyZero())
@@ -105,7 +104,6 @@ void UCharacterPawnMovementComponent::JumpInput()
 {
     if (CheckIfGrounded())
     {
-        bIsJumping = true;
         bIsGrounded = false;
         VerticalSpeed = JumpVelocity;
     }
