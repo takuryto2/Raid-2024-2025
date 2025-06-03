@@ -8,15 +8,6 @@
 
 #define LOG(what, ...) UE_LOG(LogTemp, Log, TEXT(what), ##__VA_ARGS__)
 
-#define SAVABLE_DATA \
-UPROPERTY(EditAnywhere, BlueprintReadWrite) \
-TMap<FString, FString> strings; \
-UPROPERTY(EditAnywhere, BlueprintReadWrite) \
-TMap<FString, int32>   ints; \
-UPROPERTY(EditAnywhere, BlueprintReadWrite) \
-TMap<FString, double>   doubles; \
-UPROPERTY(EditAnywhere, BlueprintReadWrite) \
-TMap<FString, FVector> vectors;
 
 USTRUCT(Blueprintable, BlueprintType)
 struct FSavedState
@@ -24,8 +15,6 @@ struct FSavedState
     GENERATED_BODY()
 
 	public:
-        // SAVABLE_DATA
-
         UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TMap<FString, FString> strings;
 
@@ -34,7 +23,7 @@ struct FSavedState
 
         UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TMap<FString, double>   doubles;
-        
+
         UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TMap<FString, FVector> vectors;
 

@@ -24,7 +24,7 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Basic)
 		int32 slotIndex;
 
-		// SAVABLE_DATA
+
 		UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FString, FString> strings;
 
