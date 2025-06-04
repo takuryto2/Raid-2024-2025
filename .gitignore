@@ -76,3 +76,4 @@ DerivedDataCache/*
 .vscode/*
 .ignore
 *.code-workspace
+Config/DefaultEngine.ini
