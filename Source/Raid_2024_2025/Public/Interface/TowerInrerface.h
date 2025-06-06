@@ -22,5 +22,5 @@ class RAID_2024_2025_API ITowerInrerface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void TurnTower(float ActionValue) = 0;
+	
 };
