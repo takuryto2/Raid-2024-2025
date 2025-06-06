@@ -1,6 +1,8 @@
 #include "Tower.h"
 #include "Camera/CameraComponent.h"
 
+
+
 ATower::ATower()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -10,6 +12,11 @@ ATower::ATower()
 void ATower::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void ATower::TurnTower(float ActionValue)
+{
+    TryTurn(ActionValue);
 }
 
 bool ATower::TryTurn(float ActionValue)
