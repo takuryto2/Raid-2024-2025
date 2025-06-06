@@ -2,17 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/TowerInrerface.h"
 #include "Tower.generated.h"
 
 UCLASS()
-class ATower : public AActor
+class ATower : public AActor, public ITowerInrerface
 {
     GENERATED_BODY()
 
+    virtual void TurnTower(float ActionValue) override;
 public:
     ATower();
-
-    UFUNCTION(BlueprintCallable)
+    
     bool TryTurn(float ActionValue);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
