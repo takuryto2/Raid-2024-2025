@@ -45,11 +45,15 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         JumpBufferTimer = 0.f;
     }
 
-    // Gravité
-    const float GravityForce = (Mass * 2) * Gravity;
-    const float GravityAcceleration = GravityForce / Mass;
-    VerticalSpeed += GravityAcceleration * DeltaTime;
+    if (!bIsGrounded)
+    {
+        // Gravité
+        const float GravityForce = (Mass * 2) * Gravity;
+        const float GravityAcceleration = GravityForce / Mass;
+        VerticalSpeed += GravityAcceleration * DeltaTime;
 
+    }
+    
     // Dash
     if (bIsDashing)
     {
@@ -174,7 +178,7 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
         return false;
 
     FVector Start = UpdatedComponent->GetComponentLocation();
-    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 1);
+    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 5);
 
     FHitResult GroundHit;
     bool bHit = GetWorld()->SweepSingleByChannel(
