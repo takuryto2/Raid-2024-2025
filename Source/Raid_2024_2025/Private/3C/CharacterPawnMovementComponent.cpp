@@ -177,8 +177,8 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
     if (!GetWorld() || !UpdatedComponent)
         return false;
 
-    FVector Start = UpdatedComponent->GetComponentLocation();
-    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 5);
+    FVector Start = UpdatedComponent->GetComponentLocation();    
+    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 7.5);
 
     FHitResult GroundHit;
     bool bHit = GetWorld()->SweepSingleByChannel(
