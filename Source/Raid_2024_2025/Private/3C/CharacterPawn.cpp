@@ -6,7 +6,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputAction.h"
+#include "Tower.h"
 #include "3C/CharacterPawnMovementComponent.h"
+#include "Interface/TowerInrerface.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ACharacterPawn::ACharacterPawn()
@@ -21,7 +24,7 @@ ACharacterPawn::ACharacterPawn()
 void ACharacterPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	// UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UTowerInrerface::StaticClass(), OutActors);
 }
 
 // Called every frame
@@ -58,6 +61,7 @@ void ACharacterPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(InputConfig->MoveAction, ETriggerEvent::Completed, this, &ACharacterPawn::MoveCancelled);
 		EnhancedInputComponent->BindAction(InputConfig->JumpAction, ETriggerEvent::Started, this, &ACharacterPawn::Jump);
 		EnhancedInputComponent->BindAction(InputConfig->DashAction, ETriggerEvent::Started, this, &ACharacterPawn::Dash);
+		EnhancedInputComponent->BindAction(InputConfig->TurnAction, ETriggerEvent::Started, this, &ACharacterPawn::TurnTower);
 	}
 }
 
@@ -71,6 +75,7 @@ void ACharacterPawn::MoveCancelled()
 	MovementComponent->MoveInput(FVector2D(0, 0));
 }
 
+
 void ACharacterPawn::Jump()
 {
 	MovementComponent->JumpInput();
@@ -81,3 +86,11 @@ void ACharacterPawn::Dash()
 	MovementComponent->DashInput();
 }
 
+void ACharacterPawn::TurnTower(const FInputActionValue& InputActionValue)
+{
+	// if (Tower == nullptr)
+	// 	return;
+	//
+	// Tower = Cast<ITowerInrerface>(OutActors[0]);
+	// Tower->TurnTower(InputActionValue.Get<float>());
+}

@@ -7,9 +7,16 @@ ATower::ATower()
     SetActorTickEnabled(false);
 }
 
+
+
 void ATower::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void ATower::TurnTower(float ActionValue)
+{
+    TryTurn(ActionValue);
 }
 
 bool ATower::TryTurn(float ActionValue)

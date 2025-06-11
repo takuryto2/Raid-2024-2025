@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
+#include "Interface/TowerInrerface.h"
 #include "CharacterPawn.generated.h"
 
 
@@ -42,6 +43,7 @@ public:
 	virtual void Jump();
 	virtual void Dash();
 	virtual void MoveCancelled();
+	void TurnTower(const FInputActionValue& InputActionValue);
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -49,5 +51,9 @@ public:
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCharacterPawnMovementComponent> MovementComponent;
+
+	UPROPERTY()
+	TArray<AActor*> OutActors;
+	ITowerInrerface* Tower;
 
 };

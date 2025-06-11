@@ -2,16 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/TowerInrerface.h"
 #include "Tower.generated.h"
 
 UCLASS()
-class ATower : public AActor
+class ATower : public AActor, public ITowerInrerface
 {
     GENERATED_BODY()
 
 public:
     ATower();
 
+    virtual void TurnTower(float ActionValue) override;
     UFUNCTION(BlueprintCallable)
     bool TryTurn(float ActionValue);
 
@@ -25,6 +27,7 @@ protected:
     virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
 
+    
     void Turn(float ActionValue);
     void CancelTurn();
     FVector GetFutureCameraPosition(float ActionValue) const;
