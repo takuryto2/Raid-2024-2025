@@ -18,9 +18,6 @@ public:
 	// Sets default values for this actor's properties
 	ASavableActor();
 
-	UFUNCTION(BlueprintCallable, Category = "Save System")
-	FSavedState GetNewState();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -30,6 +27,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual bool ShouldRecreate_Implementation() override;
 
-	virtual FSavedState GetState_Implementation() override;
+	virtual void GetState_Implementation(FSavedState& state) override;
 	virtual void SetState_Implementation(const FSavedState& state) override;
 };

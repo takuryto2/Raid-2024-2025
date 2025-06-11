@@ -47,7 +47,7 @@ void USaveGameObject::SaveObjects(const TArray<AActor*> actors, UObject* worldCo
         FSavedState state;
         if (savableActor->Implements<USavableState>())
         {
-            state = ISavableState::Execute_GetState(savableActor);
+            ISavableState::Execute_GetState(savableActor, state);
             LOG("Saving state of actor %s", *fullName)
         }
 

@@ -20,18 +20,14 @@ class RAID_2024_2025_API ISavableState
 
 	public:
 		UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Save System")
-		FSavedState GetState();
+		void GetState(FSavedState& state);
 
 		UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Save System")
 		void SetState(const FSavedState& state);
 };
 
 #define DEFAULT_GETSTATE(cls) \
-FSavedState cls::GetState_Implementation() \
-{ \
-    FSavedState state; \
-    return state; \
-} 
+void cls::GetState_Implementation(FSavedState& state) {} 
 
 #define DEFAULT_SETSTATE(cls) \
 void cls::SetState_Implementation(const FSavedState& state) { } 
