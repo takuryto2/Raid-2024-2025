@@ -127,3 +127,39 @@ void USaveGameObject::LoadObjects(const TArray<AActor*> actors, UObject* worldCo
     
     // do something with the remaining data, perhaps?
 }
+
+FString USaveGameObject::ToString() const 
+{
+    FString rv = TEXT("Global saved state");
+    
+    rv += TEXT("\n    Strings:\n");
+    for (const TPair<FString, FString>& Pair : strings)
+    {
+        rv += FString::Printf(TEXT("        %s = \"%s\"\n"), *Pair.Key, *Pair.Value);
+    }
+    
+    rv += TEXT("\n    Ints:\n");
+    for (const TPair<FString, int32>& Pair : ints)
+    {
+        rv += FString::Printf(TEXT("        %s = %d\n"), *Pair.Key, Pair.Value);
+    }
+    
+    rv += TEXT("\n    Doubles:\n");
+    for (const TPair<FString, float>& Pair : doubles)
+    {
+        rv += FString::Printf(TEXT("        %s = %.2f\n"), *Pair.Key, Pair.Value);
+    }
+    
+    rv += TEXT("\n    Vectors:\n");
+    for (const TPair<FString, FVector>& Pair : vectors)
+    {
+        rv += FString::Printf(TEXT("        %s = (X=%.2f, Y=%.2f, Z=%.2f)\n"), *Pair.Key, Pair.Value.X, Pair.Value.Y, Pair.Value.Z);
+    }
+
+    for (const TPair<FString, FSavedState>& Pair : objectToState)
+    {
+        rv += Pair.Value.ToString();
+    }
+    
+    return rv;
+}

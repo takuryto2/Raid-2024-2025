@@ -57,4 +57,7 @@ class RAID_2024_2025_API USaveGameObject : public USaveGame
 		void LoadObjects(const TArray<AActor*> actors, UObject* worldContextObject);
 
 		void GetAllSavableActors(const UWorld* world, TArray<AActor*>& outSavable);
+
+		UFUNCTION(BlueprintCallable, Category = "Save System")
+		FString ToString() const;
 };
