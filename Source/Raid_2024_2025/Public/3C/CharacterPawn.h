@@ -45,6 +45,7 @@ public:
 	virtual void MoveCancelled();
 	void TurnTower(const FInputActionValue& InputActionValue);
 
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
