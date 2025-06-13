@@ -1,4 +1,4 @@
-﻿#include "3C/CharacterPawnMovementComponent.h"
+﻿#include "3C/CharacterPawnMovementComponent.h" 
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 #include "CollisionQueryParams.h"
@@ -22,6 +22,8 @@ void UCharacterPawnMovementComponent::BeginPlay()
         CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - halfHeight;
         StepMult = 2.f;
     }
+
+    GroundNormal = FVector::UpVector;
 }
 
 void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -47,13 +49,11 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     if (!bIsGrounded)
     {
-        // Gravité
         const float GravityForce = (Mass * 2) * Gravity;
         const float GravityAcceleration = GravityForce / Mass;
         VerticalSpeed += GravityAcceleration * DeltaTime;
-
     }
-    
+
     // Dash
     if (bIsDashing)
     {
@@ -84,11 +84,23 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
         float SpeedScale = SpeedCurve ? SpeedCurve->GetFloatValue(WalkProgress) : 1.f;
         CurrentSpeed = SpeedScale * VMax;
+
         FVector2D MoveVec = CurrentSpeed * DeltaTime * CurrentDirection;
-        Movement += FVector(0, MoveVec.Y, 0);
+        FVector Move = FVector(0, MoveVec.Y, 0);
+
+        // Coller au sol uniquement si on bouge
+        if (bIsGrounded)
+        {
+            FVector Projected = FVector::VectorPlaneProject(Move, GroundNormal);
+            Movement += Projected;
+        }
+        else
+        {
+            Movement += Move;
+        }
     }
 
-    // Appliquer gravité
+    // Gravité (appliquée seulement si en l'air ou en montée)
     if (!bIsGrounded || VerticalSpeed > 0.f)
     {
         Movement.Z += VerticalSpeed * DeltaTime;
@@ -116,7 +128,6 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
 void UCharacterPawnMovementComponent::JumpInput()
 {
-    // Active un buffer pour un saut dès qu’on est au sol
     JumpBufferTimer = JumpBufferDuration;
 }
 
@@ -124,6 +135,10 @@ void UCharacterPawnMovementComponent::DashInput()
 {
     if (!bIsDashing && DashCooldownTimer <= 0.f)
     {
+        WalkProgress = 0.f;
+        CurrentSpeed = 0.f;
+        VerticalSpeed = 0.f;
+        
         bCanMove = false;
         bIsDashing = true;
         DashTimer = 0.f;
@@ -131,6 +146,7 @@ void UCharacterPawnMovementComponent::DashInput()
         DashCooldownTimer = DashCooldown + DashDuration;
     }
 }
+
 
 void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
 {
@@ -178,7 +194,7 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
         return false;
 
     FVector Start = UpdatedComponent->GetComponentLocation();    
-    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 7.5);
+    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 7.5f);  // Ajuste si nécessaire
 
     FHitResult GroundHit;
     bool bHit = GetWorld()->SweepSingleByChannel(
@@ -197,9 +213,12 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
 
     if (bHit)
     {
+        GroundNormal = GroundHit.Normal;
+
         float HitAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(GroundHit.Normal, FVector::UpVector)));
         return HitAngle <= MaxGroundAngle;
     }
 
+    GroundNormal = FVector::UpVector;
     return false;
 }

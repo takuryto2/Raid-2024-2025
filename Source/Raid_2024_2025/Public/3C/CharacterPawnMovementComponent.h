@@ -92,4 +92,6 @@ private:
     float StepMult = 0.0f;
     FCollisionQueryParams CollisionParams;
     FCollisionShape FeetShape;
+
+    FVector GroundNormal;
 };
