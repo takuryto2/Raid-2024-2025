@@ -194,7 +194,7 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
         return false;
 
     FVector Start = UpdatedComponent->GetComponentLocation();    
-    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 7.5f);  // Ajuste si nécessaire
+    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 5.f);  // Ajuste si nécessaire
 
     FHitResult GroundHit;
     bool bHit = GetWorld()->SweepSingleByChannel(
