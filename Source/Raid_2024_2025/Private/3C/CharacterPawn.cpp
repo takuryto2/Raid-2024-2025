@@ -36,6 +36,8 @@ void ACharacterPawn::BeginPlay()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Aucun TowerActor trouvé dans la scène."));
 	}
+
+	RightDirection = FVector2D(0.f, 1.f);
 }
 
 // Called every frame
@@ -78,14 +80,13 @@ void ACharacterPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void ACharacterPawn::Move(const FInputActionValue& InputActionValue)
 {
-	MovementComponent->MoveInput(InputActionValue.Get<FVector2D>(), LeftDirection);
+	MovementComponent->MoveInput(InputActionValue.Get<FVector2D>(), RightDirection);
 }
 
-void ACharacterPawn::SetLeftDirection(FVector2D TowerLeftDirection)
+void ACharacterPawn::SetRightDirection(FVector2D TowerRightDirection)
 {
-	LeftDirection = TowerLeftDirection;
+	RightDirection = TowerRightDirection;
 }
-
 
 
 void ACharacterPawn::MoveCancelled()

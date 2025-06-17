@@ -77,3 +77,6 @@ DerivedDataCache/*
 .ignore
 *.code-workspace
 Config/DefaultEngine.ini
+/Content/__ExternalActors__
+/Content/__ExternalObjects__
+Config/DefaultEngine.ini

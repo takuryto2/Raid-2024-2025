@@ -48,9 +48,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FVector2D LeftDirection = FVector2D(0.f, 1.f);
+	FVector2D RightDirection = FVector2D(0.f, 1.f);
 
-	void SetLeftDirection(FVector2D LeftDirection);
+	void SetRightDirection(FVector2D TowerRightDirection);
 
 private:
 	UPROPERTY(EditDefaultsOnly)

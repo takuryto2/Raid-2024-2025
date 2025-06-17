@@ -44,4 +44,6 @@ protected:
 
     FRotator InitialRotation;
     FRotator TargetRotation;
+
+    void UpdateCharacterRightDirection();
 };

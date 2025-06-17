@@ -86,7 +86,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         CurrentSpeed = SpeedScale * VMax;
 
         FVector2D MoveVec = CurrentSpeed * DeltaTime * CurrentDirection;
-        FVector Move = FVector(0, MoveVec.Y, 0);
+        FVector Move = FVector(MoveVec.X, MoveVec.Y, 0);
 
         // Coller au sol uniquement si on bouge
         if (bIsGrounded)
@@ -148,9 +148,11 @@ void UCharacterPawnMovementComponent::DashInput()
 }
 
 
-void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction, const FVector2D& LeftDirection)
+void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction, const FVector2D& RightDirection)
 {
-    CurrentDirection = Direction * LeftDirection; //Multiplier par la gauche de la camera
+    FVector2D LocalCurrentDirection = RightDirection * FVector2D(Direction.Y); //Multiplier par la droite de la camera
+    LocalCurrentDirection.Normalize();
+    CurrentDirection = LocalCurrentDirection;
     GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, FString::Printf(TEXT("Current Direction: %s"), *CurrentDirection.ToString()));
 }
 

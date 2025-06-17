@@ -23,7 +23,6 @@ bool ATower::TryTurn(float ActionValue)
     if (bIsTurning)
         return false;
 
-
     FVector Start = PlayerActor->GetActorLocation();
     FVector End = GetFutureCameraPosition(ActionValue);
 
@@ -65,38 +64,19 @@ void ATower::Turn(float ActionValue)
 
 void ATower::TurnInput(float ActionValue, ACharacterPawn* CharacterPawn)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Turning Tower..." + FString::SanitizeFloat(ActionValue)));
-    FVector CurrentPos = CharacterPawn->GetActorLocation();
-    FVector TargetPos = FVector(CurrentPos.X, CurrentPos.Y + 10.f, CurrentPos.Z);
+    if (!CharacterPawn)
+        return;
 
-    
-    CharacterPawn->SetActorLocation(TargetPos);
+    // Stocker l'Actor pour mise à jour de direction plus tard
+    PlayerActor = CharacterPawn;
 
-    UCameraComponent * Camera = nullptr;
-    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
-    {
-        if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
-        {
-            Camera = FoundCamera;
-            break;
-        }
-    }
-
-    FVector RightVector = Camera->GetRightVector();
-    FVector2D RightDirection(RightVector.X, RightVector.Y);
-
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("RightDirection: " + RightDirection.ToString()));
-    
-    CharacterPawn->SetLeftDirection(-RightDirection);
     TryTurn(ActionValue);
-}
 
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Turning Tower..." + FString::SanitizeFloat(ActionValue)));
+}
 
 void ATower::CancelTurn()
 {
-    /*if (GEngine)
-        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, TEXT("TURN CANCELLED"));*/
-
     if (!CameraPivot)
         return;
 
@@ -115,17 +95,21 @@ void ATower::CancelTurn()
 
     FVector OriginalLocation = Camera->GetRelativeLocation();
     float shaveValue = 1.f;
-    FVector ShakeOffset = FVector(FMath::RandRange(-shaveValue, shaveValue), FMath::RandRange(-shaveValue, shaveValue), FMath::RandRange(-shaveValue, shaveValue));
+    FVector ShakeOffset = FVector(
+        FMath::RandRange(-shaveValue, shaveValue),
+        FMath::RandRange(-shaveValue, shaveValue),
+        FMath::RandRange(-shaveValue, shaveValue)
+    );
     Camera->SetRelativeLocation(OriginalLocation + ShakeOffset);
 
     FTimerHandle TimerHandle;
     GetWorldTimerManager().SetTimer(TimerHandle, [Camera, OriginalLocation]()
+    {
+        if (Camera)
         {
-            if (Camera)
-            {
-                Camera->SetRelativeLocation(OriginalLocation);
-            }
-        }, 0.05f, false);
+            Camera->SetRelativeLocation(OriginalLocation);
+        }
+    }, 0.05f, false);
 }
 
 FVector ATower::GetFutureCameraPosition(float ActionValue) const
@@ -159,6 +143,36 @@ FVector ATower::GetFutureCameraPosition(float ActionValue) const
     return CameraPivot->GetComponentLocation() + FutureRotation.RotateVector(LocalOffset);
 }
 
+void ATower::UpdateCharacterRightDirection()
+{
+    if (!CameraPivot || !PlayerActor)
+        return;
+
+    ACharacterPawn* CharacterPawn = Cast<ACharacterPawn>(PlayerActor);
+    if (!CharacterPawn)
+        return;
+
+    UCameraComponent* Camera = nullptr;
+    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
+    {
+        if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
+        {
+            Camera = FoundCamera;
+            break;
+        }
+    }
+
+    if (!Camera)
+        return;
+
+    FVector RightVector = Camera->GetRightVector();
+    FVector2D RightDirection(RightVector.X, RightVector.Y);
+
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Setting new RightDirection: " + RightDirection.ToString()));
+
+    CharacterPawn->SetRightDirection(RotationDirection * -RightDirection);
+}
+
 void ATower::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -178,6 +192,7 @@ void ATower::Tick(float DeltaTime)
         CameraPivot->SetWorldRotation(TargetRotation);
         bIsTurning = false;
         SetActorTickEnabled(false);
+        
+        UpdateCharacterRightDirection();
     }
 }
-
