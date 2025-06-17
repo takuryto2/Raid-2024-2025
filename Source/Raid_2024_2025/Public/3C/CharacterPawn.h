@@ -42,12 +42,21 @@ public:
 	virtual void Jump();
 	virtual void Dash();
 	virtual void MoveCancelled();
+	virtual void Turn(const FInputActionValue& InputActionValue);
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FVector2D LeftDirection = FVector2D(0.f, 1.f);
+
+	void SetLeftDirection(FVector2D LeftDirection);
 
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCharacterPawnMovementComponent> MovementComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<AActor> TowerActor;
 
 };

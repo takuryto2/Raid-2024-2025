@@ -14,7 +14,7 @@ public:
 
     void JumpInput();
     void DashInput();
-    void MoveInput(const FVector2D& Direction);
+    void MoveInput(const FVector2D& Direction, const FVector2D& LeftDirection);
 
     float CurrentSpeed = 0;
 

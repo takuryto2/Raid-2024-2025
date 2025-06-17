@@ -16,7 +16,7 @@ bool ATower::TryTurn(float ActionValue)
 {
     if (!PlayerActor || !CameraPivot)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Missing player or CameraPivot."));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayerActor or CameraPivot is null."));
         return false;
     }
 
@@ -62,6 +62,35 @@ void ATower::Turn(float ActionValue)
 
     SetActorTickEnabled(true);
 }
+
+void ATower::TurnInput(float ActionValue, ACharacterPawn* CharacterPawn)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Turning Tower..." + FString::SanitizeFloat(ActionValue)));
+    FVector CurrentPos = CharacterPawn->GetActorLocation();
+    FVector TargetPos = FVector(CurrentPos.X, CurrentPos.Y + 10.f, CurrentPos.Z);
+
+    
+    CharacterPawn->SetActorLocation(TargetPos);
+
+    UCameraComponent * Camera = nullptr;
+    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
+    {
+        if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
+        {
+            Camera = FoundCamera;
+            break;
+        }
+    }
+
+    FVector RightVector = Camera->GetRightVector();
+    FVector2D RightDirection(RightVector.X, RightVector.Y);
+
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("RightDirection: " + RightDirection.ToString()));
+    
+    CharacterPawn->SetLeftDirection(-RightDirection);
+    TryTurn(ActionValue);
+}
+
 
 void ATower::CancelTurn()
 {

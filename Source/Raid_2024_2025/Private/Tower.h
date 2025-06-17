@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "3C/CharacterPawn.h"
 #include "GameFramework/Actor.h"
 #include "Tower.generated.h"
 
@@ -14,6 +15,8 @@ public:
 
     UFUNCTION(BlueprintCallable)
     bool TryTurn(float ActionValue);
+    
+    void TurnInput(float ActionValue, ACharacterPawn* CharacterPawn);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USceneComponent* CameraPivot;

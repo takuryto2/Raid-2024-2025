@@ -148,9 +148,10 @@ void UCharacterPawnMovementComponent::DashInput()
 }
 
 
-void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
+void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction, const FVector2D& LeftDirection)
 {
-    CurrentDirection = Direction;
+    CurrentDirection = Direction * LeftDirection; //Multiplier par la gauche de la camera
+    GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, FString::Printf(TEXT("Current Direction: %s"), *CurrentDirection.ToString()));
 }
 
 void UCharacterPawnMovementComponent::PerformSlideAsyncTrace()
