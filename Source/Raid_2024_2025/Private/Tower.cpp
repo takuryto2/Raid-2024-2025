@@ -1,5 +1,7 @@
 #include "Tower.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Components/StaticMeshComponent.h"
 
 ATower::ATower()
 {
@@ -23,20 +25,48 @@ bool ATower::TryTurn(float ActionValue)
     if (bIsTurning)
         return false;
 
-    FVector Start = PlayerActor->GetActorLocation();
-    FVector End = GetFutureCameraPosition(ActionValue);
+    float Direction = FMath::Sign(ActionValue);
 
+    FVector PlayerLocation = PlayerActor->GetActorLocation();
+    FVector NextPlayerLocation = PlayerLocation;
+
+    if (Direction < 0.f && LeftAnchor)
+    {
+        NextPlayerLocation.X = LeftAnchor->GetComponentLocation().X;
+        NextPlayerLocation.Y = LeftAnchor->GetComponentLocation().Y;
+    }
+    else if (Direction > 0.f && RightAnchor)
+    {
+        NextPlayerLocation.X = RightAnchor->GetComponentLocation().X;
+        NextPlayerLocation.Y = RightAnchor->GetComponentLocation().Y;
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Missing anchor for this direction."));
+        return false;
+    }
+
+    // Box settings
+    FVector BoxHalfSize = FVector(10.f, 10.f, 10.f);
+    FRotator BoxRotation = FRotator::ZeroRotator;
+
+    // Trace
     FHitResult HitResult;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
-    Params.AddIgnoredActor(PlayerActor);
-
-    bool bHit = GetWorld()->LineTraceSingleByChannel(
+    bool bHit = UKismetSystemLibrary::BoxTraceSingle(
+        GetWorld(),
+        PlayerLocation,
+        NextPlayerLocation,
+        BoxHalfSize,
+        BoxRotation,
+        UEngineTypes::ConvertToTraceType(ECC_Visibility),
+        false,
+        { this, PlayerActor },
+        EDrawDebugTrace::ForDuration,
         HitResult,
-        Start,
-        End,
-        ECC_Visibility,
-        Params
+        true,
+        FLinearColor::Red,
+        FLinearColor::Green,
+        2.0f
     );
 
     if (bHit)
@@ -47,9 +77,10 @@ bool ATower::TryTurn(float ActionValue)
 
     bIsTurning = true;
     Turn(ActionValue);
-
     return true;
 }
+
+
 
 void ATower::Turn(float ActionValue)
 {
@@ -67,7 +98,6 @@ void ATower::TurnInput(float ActionValue, ACharacterPawn* CharacterPawn)
     if (!CharacterPawn)
         return;
 
-    // Stocker l'Actor pour mise à jour de direction plus tard
     PlayerActor = CharacterPawn;
 
     TryTurn(ActionValue);
@@ -112,7 +142,7 @@ void ATower::CancelTurn()
     }, 0.05f, false);
 }
 
-FVector ATower::GetFutureCameraPosition(float ActionValue) const
+FVector ATower::GetNextCameraPosition(float ActionValue) const
 {
     if (!CameraPivot)
     {
@@ -137,10 +167,10 @@ FVector ATower::GetFutureCameraPosition(float ActionValue) const
     }
 
     float Direction = FMath::Sign(ActionValue);
-    FRotator FutureRotation = CameraPivot->GetComponentRotation() + FRotator(0.f, 90.f * Direction, 0.f);
+    FRotator NextRotation = CameraPivot->GetComponentRotation() + FRotator(0.f, 90.f * Direction, 0.f);
     FVector LocalOffset = Camera->GetRelativeLocation();
 
-    return CameraPivot->GetComponentLocation() + FutureRotation.RotateVector(LocalOffset);
+    return CameraPivot->GetComponentLocation() + NextRotation.RotateVector(LocalOffset);
 }
 
 void ATower::UpdateCharacterRightDirection()
@@ -195,7 +225,21 @@ void ATower::LerpPlayer()
     FVector Offset = BackwardDirection * OffsetDistance;
 
     PlayerLerpStart = PlayerActor->GetActorLocation();
+
+    //PlayerLerpTarget = PlayerLerpStart + Offset;
     PlayerLerpTarget = PlayerLerpStart + Offset;
+
+    if (RotationDirection < 0 && LeftAnchor)
+    {
+        PlayerLerpTarget.X = LeftAnchor->GetComponentLocation().X;
+        PlayerLerpTarget.Y = LeftAnchor->GetComponentLocation().Y;
+    }
+    else if (RotationDirection > 0 && RightAnchor)
+    {
+        PlayerLerpTarget.X = RightAnchor->GetComponentLocation().X;
+        PlayerLerpTarget.Y = RightAnchor->GetComponentLocation().Y;
+    }
+
 
     PlayerLerpTimer = 0.f;
     bIsLerpingPlayer = true;

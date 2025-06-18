@@ -24,13 +24,19 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     AActor* PlayerActor;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* LeftAnchor;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* RightAnchor;
+
 protected:
     virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
 
     void Turn(float ActionValue);
     void CancelTurn();
-    FVector GetFutureCameraPosition(float ActionValue) const;
+    FVector GetNextCameraPosition(float ActionValue) const;
 
 
     UPROPERTY(EditAnywhere)
