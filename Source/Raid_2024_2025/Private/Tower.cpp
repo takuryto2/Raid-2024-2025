@@ -170,7 +170,7 @@ void ATower::UpdateCharacterRightDirection()
 
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Setting new RightDirection: " + RightDirection.ToString()));
 
-    CharacterPawn->SetRightDirection(RotationDirection * -RightDirection);
+    CharacterPawn->SetRightDirection(RightDirection);
 }
 
 void ATower::Tick(float DeltaTime)
