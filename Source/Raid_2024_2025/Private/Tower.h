@@ -46,4 +46,13 @@ protected:
     FRotator TargetRotation;
 
     void UpdateCharacterRightDirection();
+
+    FVector PlayerLerpStart;
+    FVector PlayerLerpTarget;
+    float PlayerLerpTimer = 0.f;
+    bool bIsLerpingPlayer = false;
+    const float PlayerLerpDuration = 0.1f;
+    const float OffsetDistance = 200.f;
+
+    void LerpPlayer();
 };

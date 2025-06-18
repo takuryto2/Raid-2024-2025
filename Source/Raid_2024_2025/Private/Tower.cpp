@@ -170,29 +170,75 @@ void ATower::UpdateCharacterRightDirection()
 
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Setting new RightDirection: " + RightDirection.ToString()));
 
-    CharacterPawn->SetRightDirection(RotationDirection * -RightDirection);
+    CharacterPawn->SetRightDirection(RightDirection);
 }
+
+void ATower::LerpPlayer()
+{
+    if (!CameraPivot || !PlayerActor)
+        return;
+
+    UCameraComponent* Camera = nullptr;
+    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
+    {
+        if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
+        {
+            Camera = FoundCamera;
+            break;
+        }
+    }
+
+    if (!Camera)
+        return;
+
+    FVector BackwardDirection = -Camera->GetForwardVector();
+    FVector Offset = BackwardDirection * OffsetDistance;
+
+    PlayerLerpStart = PlayerActor->GetActorLocation();
+    PlayerLerpTarget = PlayerLerpStart + Offset;
+
+    PlayerLerpTimer = 0.f;
+    bIsLerpingPlayer = true;
+}
+
 
 void ATower::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (!bIsTurning)
-        return;
-
-    RotationTimer += DeltaTime;
-    float RawAlpha = FMath::Clamp(RotationTimer / TurnDuration, 0.f, 1.f);
-    float Alpha = FMath::InterpEaseInOut(0.f, 1.f, RawAlpha, 2.5f);
-
-    FRotator NewRotation = FMath::Lerp(InitialRotation, TargetRotation, Alpha);
-    CameraPivot->SetWorldRotation(NewRotation);
-
-    if (Alpha >= 1.0f)
+    if (bIsTurning)
     {
-        CameraPivot->SetWorldRotation(TargetRotation);
-        bIsTurning = false;
-        SetActorTickEnabled(false);
-        
-        UpdateCharacterRightDirection();
+        RotationTimer += DeltaTime;
+        float RawAlpha = FMath::Clamp(RotationTimer / TurnDuration, 0.f, 1.f);
+        float Alpha = FMath::InterpEaseInOut(0.f, 1.f, RawAlpha, 2.5f);
+
+        FRotator NewRotation = FMath::Lerp(InitialRotation, TargetRotation, Alpha);
+        CameraPivot->SetWorldRotation(NewRotation);
+
+        if (Alpha >= 1.0f)
+        {
+            CameraPivot->SetWorldRotation(TargetRotation);
+            bIsTurning = false;
+
+            UpdateCharacterRightDirection();
+            LerpPlayer();
+        }
+    }
+
+    if (bIsLerpingPlayer && PlayerActor)
+    {
+        PlayerLerpTimer += DeltaTime;
+        float Alpha = FMath::Clamp(PlayerLerpTimer / PlayerLerpDuration, 0.f, 1.f);
+        FVector NewLocation = FMath::Lerp(PlayerLerpStart, PlayerLerpTarget, Alpha);
+        PlayerActor->SetActorLocation(NewLocation);
+
+        if (Alpha >= 1.0f)
+        {
+            bIsLerpingPlayer = false;
+
+            SetActorTickEnabled(false);
+        }
     }
 }
+
+
