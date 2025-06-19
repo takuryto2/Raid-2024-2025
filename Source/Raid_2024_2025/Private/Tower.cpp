@@ -280,7 +280,7 @@ void ATower::Tick(float DeltaTime)
         {
             bIsLerpingPlayer = false;
 
-            SetActorTickEnabled(false);
+            //SetActorTickEnabled(false);
         }
     }
 }
