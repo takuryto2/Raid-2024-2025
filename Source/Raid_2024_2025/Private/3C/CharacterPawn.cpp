@@ -2,10 +2,13 @@
 
 
 #include "3C/CharacterPawn.h"
+
+#include "EngineUtils.h"
 #include "Config/Pawn/InputConfig.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputAction.h"
+#include "Tower.h"
 #include "3C/CharacterPawnMovementComponent.h"
 
 // Sets default values
@@ -21,7 +24,18 @@ ACharacterPawn::ACharacterPawn()
 void ACharacterPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Recherche du premier ATower dans la scène
+	for (TActorIterator<ATower> It(GetWorld()); It; ++It)
+	{
+		TowerActor = *It;
+		break; // Prend le premier trouvé
+	}
+
+	if (!TowerActor)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Aucun TowerActor trouvé dans la scène."));
+	}
 }
 
 // Called every frame
@@ -58,6 +72,7 @@ void ACharacterPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(InputConfig->MoveAction, ETriggerEvent::Completed, this, &ACharacterPawn::MoveCancelled);
 		EnhancedInputComponent->BindAction(InputConfig->JumpAction, ETriggerEvent::Started, this, &ACharacterPawn::Jump);
 		EnhancedInputComponent->BindAction(InputConfig->DashAction, ETriggerEvent::Started, this, &ACharacterPawn::Dash);
+		EnhancedInputComponent->BindAction(InputConfig->TurnAction, ETriggerEvent::Triggered, this, &ACharacterPawn::Turn);
 	}
 }
 
@@ -65,6 +80,12 @@ void ACharacterPawn::Move(const FInputActionValue& InputActionValue)
 {
 	MovementComponent->MoveInput(InputActionValue.Get<FVector2D>());
 }
+
+void ACharacterPawn::SetRightDirection(FVector2D TowerRightDirection)
+{
+	MovementComponent->UpdateRightDirection(TowerRightDirection);
+}
+
 
 void ACharacterPawn::MoveCancelled()
 {
@@ -79,5 +100,24 @@ void ACharacterPawn::Jump()
 void ACharacterPawn::Dash()
 {
 	MovementComponent->DashInput();
+}
+
+void ACharacterPawn::Turn(const FInputActionValue& InputActionValue)
+{
+	if (TowerActor)
+	{
+		if (ATower* Tower = Cast<ATower>(TowerActor))
+		{
+			Tower->TurnInput(InputActionValue.Get<float>(), this);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("TowerActor is not of type ATower."));
+		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("TowerActor is null."));
+	}
 }
 
