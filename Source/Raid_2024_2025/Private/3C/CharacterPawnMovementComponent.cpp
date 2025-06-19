@@ -63,11 +63,9 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         if (DashCurve)
         {
             float DashScale = DashCurve->GetFloatValue(Alpha);
-            FVector2D MoveVec = DashDirection * DashDistance * DashScale;
-            Movement += FVector(0, MoveVec.Y, MoveVec.X);
+            FVector MoveVec = DashDirection3D * DashDistance * DashScale;
+            Movement += MoveVec;
         }
-
-        Movement.Z += VerticalSpeed * DeltaTime;
 
         if (Alpha >= 1.f)
         {
@@ -76,6 +74,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
             DashTimer = 0.f;
         }
     }
+
     // Déplacement normal
     else if (!CurrentDirection.IsNearlyZero() && bCanMove)
     {
@@ -142,15 +141,35 @@ void UCharacterPawnMovementComponent::DashInput()
         bCanMove = false;
         bIsDashing = true;
         DashTimer = 0.f;
-        DashDirection = CurrentDirection.IsZero() ? FVector2D(0, 1) : CurrentDirection.GetSafeNormal();
         DashCooldownTimer = DashCooldown + DashDuration;
+
+        FVector DashInput = FVector(CurrentDirection.X, CurrentDirection.Y, 0.f);
+
+        // Gestion verticale (Z = haut, S = bas)
+        APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController());
+        if (PC && PC->IsInputKeyDown(EKeys::Z))
+        {
+            DashInput.Z += 1.f;
+        }
+        if (PC && PC->IsInputKeyDown(EKeys::S))
+        {
+            DashInput.Z -= 1.f;
+        }
+
+        DashDirection3D = DashInput.IsNearlyZero() ? FVector(0, 1, 0) : DashInput.GetSafeNormal();
     }
 }
 
-
-void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction, const FVector2D& RightDirection)
+void UCharacterPawnMovementComponent::UpdateRightDirection(const FVector2D& NewRightDirection)
 {
-    FVector2D LocalCurrentDirection = RightDirection * FVector2D(Direction.Y); //Multiplier par la droite de la camera
+    CurrentRightDirection = NewRightDirection;
+}
+
+
+
+void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
+{
+    FVector2D LocalCurrentDirection = CurrentRightDirection * FVector2D(Direction.Y); //Multiplier par la droite de la camera
     LocalCurrentDirection.Normalize();
     CurrentDirection = LocalCurrentDirection;
     GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, FString::Printf(TEXT("Current Direction: %s"), *CurrentDirection.ToString()));

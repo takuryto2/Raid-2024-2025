@@ -46,9 +46,6 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FVector2D RightDirection = FVector2D(0.f, 1.f);
 
 	void SetRightDirection(FVector2D TowerRightDirection);
 

@@ -14,9 +14,11 @@ public:
 
     void JumpInput();
     void DashInput();
-    void MoveInput(const FVector2D& Direction, const FVector2D& RightDirection);
+    void UpdateRightDirection(const FVector2D& NewRightDirection);
+    void MoveInput(const FVector2D& Direction);
 
     float CurrentSpeed = 0;
+    FVector2D CurrentRightDirection = FVector2D(0.f, 1.f);
 
 protected:
     virtual void BeginPlay() override;
@@ -85,6 +87,8 @@ private:
     FVector2D CurrentDirection;
     float WalkProgress = 0.f;
     bool bCanMove = true;
+
+    FVector DashDirection3D;
 
     // Capsule
     float halfHeight = 0.0f;
