@@ -156,7 +156,7 @@ void UCharacterPawnMovementComponent::DashInput()
             DashInput.Z -= 1.f;
         }
 
-        DashDirection3D = DashInput.IsNearlyZero() ? FVector(0, 1, 0) : DashInput.GetSafeNormal();
+        DashDirection3D = DashInput.IsNearlyZero() ? FVector(CurrentRightDirection.X, CurrentRightDirection.Y, 0) : DashInput.GetSafeNormal();
     }
 }
 
