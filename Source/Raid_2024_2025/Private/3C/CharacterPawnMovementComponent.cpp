@@ -3,6 +3,7 @@
 #include "DrawDebugHelpers.h"
 #include "CollisionQueryParams.h"
 #include "Engine/World.h"
+#include "Camera/CameraComponent.h"
 
 UCharacterPawnMovementComponent::UCharacterPawnMovementComponent()
 {

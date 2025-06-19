@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Camera/CameraComponent.h"
 #include "CharacterPawnMovementComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -19,6 +20,9 @@ public:
 
     float CurrentSpeed = 0;
     FVector2D CurrentRightDirection = FVector2D(0.f, 1.f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UCameraComponent* PlayerCamera;
 
 protected:
     virtual void BeginPlay() override;
