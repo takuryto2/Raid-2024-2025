@@ -24,13 +24,19 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     AActor* PlayerActor;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* LeftAnchor;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* RightAnchor;
+
 protected:
     virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
 
     void Turn(float ActionValue);
     void CancelTurn();
-    FVector GetFutureCameraPosition(float ActionValue) const;
+    FVector GetNextCameraPosition(float ActionValue) const;
 
 
     UPROPERTY(EditAnywhere)
@@ -46,4 +52,13 @@ protected:
     FRotator TargetRotation;
 
     void UpdateCharacterRightDirection();
+
+    FVector PlayerLerpStart;
+    FVector PlayerLerpTarget;
+    float PlayerLerpTimer = 0.f;
+    bool bIsLerpingPlayer = false;
+    const float PlayerLerpDuration = 0.1f;
+    const float OffsetDistance = 200.f;
+
+    void LerpPlayer();
 };
