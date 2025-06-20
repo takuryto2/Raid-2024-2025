@@ -30,12 +30,12 @@ bool ATower::TryTurn(float ActionValue)
     FVector PlayerLocation = PlayerActor->GetActorLocation();
     FVector NextPlayerLocation = PlayerLocation;
 
-    if (Direction < 0.f && LeftAnchor)
+    if (Direction > 0.f && LeftAnchor)
     {
         NextPlayerLocation.X = LeftAnchor->GetComponentLocation().X;
         NextPlayerLocation.Y = LeftAnchor->GetComponentLocation().Y;
     }
-    else if (Direction > 0.f && RightAnchor)
+    else if (Direction < 0.f && RightAnchor)
     {
         NextPlayerLocation.X = RightAnchor->GetComponentLocation().X;
         NextPlayerLocation.Y = RightAnchor->GetComponentLocation().Y;
