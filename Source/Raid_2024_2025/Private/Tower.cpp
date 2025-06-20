@@ -109,7 +109,7 @@ void ATower::CancelTurn()
         return;
 
     UCameraComponent* Camera = nullptr;
-    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
+    for (USceneComponent* Child : playerCameraPivot->GetAttachChildren())
     {
         if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
         {
