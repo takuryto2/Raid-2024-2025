@@ -46,11 +46,9 @@ bool ATower::TryTurn(float ActionValue)
         return false;
     }
 
-    // Box settings
+    // Box trace
     FVector BoxHalfSize = FVector(10.f, 10.f, 10.f);
     FRotator BoxRotation = FRotator::ZeroRotator;
-
-    // Trace
     FHitResult HitResult;
     bool bHit = UKismetSystemLibrary::BoxTraceSingle(
         GetWorld(),
@@ -183,7 +181,7 @@ void ATower::UpdateCharacterRightDirection()
         return;
 
     UCameraComponent* Camera = nullptr;
-    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
+    for (USceneComponent* Child : playerCameraPivot->GetAttachChildren())
     {
         if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
         {
@@ -208,25 +206,11 @@ void ATower::LerpPlayer()
     if (!CameraPivot || !PlayerActor)
         return;
 
-    UCameraComponent* Camera = nullptr;
-    for (USceneComponent* Child : CameraPivot->GetAttachChildren())
-    {
-        if (UCameraComponent* FoundCamera = Cast<UCameraComponent>(Child))
-        {
-            Camera = FoundCamera;
-            break;
-        }
-    }
-
-    if (!Camera)
-        return;
-
-    FVector BackwardDirection = -Camera->GetForwardVector();
+    FVector BackwardDirection = -playerCameraPivot->GetForwardVector();
     FVector Offset = BackwardDirection * OffsetDistance;
 
     PlayerLerpStart = PlayerActor->GetActorLocation();
 
-    //PlayerLerpTarget = PlayerLerpStart + Offset;
     PlayerLerpTarget = PlayerLerpStart + Offset;
 
     if (RotationDirection < 0 && LeftAnchor)
@@ -279,8 +263,6 @@ void ATower::Tick(float DeltaTime)
         if (Alpha >= 1.0f)
         {
             bIsLerpingPlayer = false;
-
-            //SetActorTickEnabled(false);
         }
     }
 }

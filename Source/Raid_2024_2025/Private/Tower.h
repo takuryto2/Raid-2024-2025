@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "3C/CharacterPawn.h"
 #include "GameFramework/Actor.h"
+#include "Camera/CameraComponent.h"
 #include "Tower.generated.h"
 
 UCLASS()
@@ -29,6 +30,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UStaticMeshComponent* RightAnchor;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    USceneComponent* playerCameraPivot;
 
 protected:
     virtual void Tick(float DeltaTime) override;
