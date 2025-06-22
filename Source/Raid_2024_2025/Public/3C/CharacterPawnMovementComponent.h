@@ -94,6 +94,12 @@ private:
 
     FVector DashDirection3D;
 
+    //platform tracking
+
+    AActor* CurrentFloorActor = nullptr;
+    FTransform PreviousPlatformTransform;
+    bool bWasOnPlatformLastFrame = false;
+
     // Capsule
     float halfHeight = 0.0f;
     float CapsuleStep = 0.0f;
