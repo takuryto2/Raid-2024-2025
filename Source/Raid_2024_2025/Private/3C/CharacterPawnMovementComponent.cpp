@@ -1,8 +1,9 @@
-﻿#include "3C/CharacterPawnMovementComponent.h"
+﻿#include "3C/CharacterPawnMovementComponent.h" 
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 #include "CollisionQueryParams.h"
 #include "Engine/World.h"
+#include "Camera/CameraComponent.h"
 
 UCharacterPawnMovementComponent::UCharacterPawnMovementComponent()
 {
@@ -22,6 +23,8 @@ void UCharacterPawnMovementComponent::BeginPlay()
         CapsuleStep = Capsule->GetScaledCapsuleHalfHeight() - halfHeight;
         StepMult = 2.f;
     }
+
+    GroundNormal = FVector::UpVector;
 }
 
 void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -33,6 +36,43 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     if (JumpBufferTimer > 0.f)
         JumpBufferTimer -= DeltaTime;
+
+    // ---- PLATFORM MOVEMENT SYNC ----
+    if (CurrentFloorActor)
+    {
+        FTransform CurrentTransform = CurrentFloorActor->GetActorTransform();
+
+        if (!bWasOnPlatformLastFrame)
+        {
+            FString PlatformName = CurrentFloorActor->GetName();
+            UE_LOG(LogTemp, Log, TEXT("Connected to platform: %s"), *PlatformName);
+            GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow, FString::Printf(TEXT("Connected to: %s"), *PlatformName));
+        }
+
+        if (bWasOnPlatformLastFrame)
+        {
+            FTransform DeltaTransform = CurrentTransform.GetRelativeTransform(PreviousPlatformTransform);
+            FVector PlatformDelta = DeltaTransform.GetTranslation();
+
+            if (!PlatformDelta.IsNearlyZero())
+            {
+                UpdatedComponent->AddWorldOffset(PlatformDelta, true);
+            }
+
+            // Optional rotation
+             FQuat RotationDelta = DeltaTransform.GetRotation();
+             UpdatedComponent->AddWorldRotation(RotationDelta.Rotator(), true);
+        }
+
+        PreviousPlatformTransform = CurrentTransform;
+        bWasOnPlatformLastFrame = true;
+    }
+    else
+    {
+        bWasOnPlatformLastFrame = false;
+    }
+
+
 
     FVector Movement = FVector::ZeroVector;
 
@@ -47,13 +87,11 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     if (!bIsGrounded)
     {
-        // Gravité
         const float GravityForce = (Mass * 2) * Gravity;
         const float GravityAcceleration = GravityForce / Mass;
         VerticalSpeed += GravityAcceleration * DeltaTime;
-
     }
-    
+
     // Dash
     if (bIsDashing)
     {
@@ -63,11 +101,9 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         if (DashCurve)
         {
             float DashScale = DashCurve->GetFloatValue(Alpha);
-            FVector2D MoveVec = DashDirection * DashDistance * DashScale;
-            Movement += FVector(0, MoveVec.Y, MoveVec.X);
+            FVector MoveVec = DashDirection3D * DashDistance * DashScale;
+            Movement += MoveVec;
         }
-
-        Movement.Z += VerticalSpeed * DeltaTime;
 
         if (Alpha >= 1.f)
         {
@@ -76,6 +112,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
             DashTimer = 0.f;
         }
     }
+
     // Déplacement normal
     else if (!CurrentDirection.IsNearlyZero() && bCanMove)
     {
@@ -84,11 +121,23 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
         float SpeedScale = SpeedCurve ? SpeedCurve->GetFloatValue(WalkProgress) : 1.f;
         CurrentSpeed = SpeedScale * VMax;
+
         FVector2D MoveVec = CurrentSpeed * DeltaTime * CurrentDirection;
-        Movement += FVector(0, MoveVec.Y, 0);
+        FVector Move = FVector(MoveVec.X, MoveVec.Y, 0);
+
+        // Coller au sol uniquement si on bouge
+        if (bIsGrounded)
+        {
+            FVector Projected = FVector::VectorPlaneProject(Move, GroundNormal);
+            Movement += Projected;
+        }
+        else
+        {
+            Movement += Move;
+        }
     }
 
-    // Appliquer gravité
+    // Gravité (appliquée seulement si en l'air ou en montée)
     if (!bIsGrounded || VerticalSpeed > 0.f)
     {
         Movement.Z += VerticalSpeed * DeltaTime;
@@ -116,25 +165,54 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
 void UCharacterPawnMovementComponent::JumpInput()
 {
-    // Active un buffer pour un saut dès qu’on est au sol
     JumpBufferTimer = JumpBufferDuration;
+    CurrentFloorActor = nullptr;
 }
 
 void UCharacterPawnMovementComponent::DashInput()
 {
     if (!bIsDashing && DashCooldownTimer <= 0.f)
     {
+        WalkProgress = 0.f;
+        CurrentSpeed = 0.f;
+        VerticalSpeed = 0.f;
+        
         bCanMove = false;
         bIsDashing = true;
         DashTimer = 0.f;
-        DashDirection = CurrentDirection.IsZero() ? FVector2D(0, 1) : CurrentDirection.GetSafeNormal();
         DashCooldownTimer = DashCooldown + DashDuration;
+
+        FVector DashInput = FVector(CurrentDirection.X, CurrentDirection.Y, 0.f);
+
+        // Gestion verticale (Z = haut, S = bas)
+        APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController());
+        if (PC && PC->IsInputKeyDown(EKeys::Z))
+        {
+            DashInput.Z += 1.f;
+        }
+        if (PC && PC->IsInputKeyDown(EKeys::S))
+        {
+            DashInput.Z -= 1.f;
+        }
+
+        DashDirection3D = DashInput.IsNearlyZero() ? FVector(CurrentRightDirection.X, CurrentRightDirection.Y, 0) : DashInput.GetSafeNormal();
     }
+    CurrentFloorActor = nullptr;
 }
+
+void UCharacterPawnMovementComponent::UpdateRightDirection(const FVector2D& NewRightDirection)
+{
+    CurrentRightDirection = NewRightDirection;
+}
+
+
 
 void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
 {
-    CurrentDirection = Direction;
+    FVector2D LocalCurrentDirection = CurrentRightDirection * FVector2D(Direction.Y); //Multiplier par la droite de la camera
+    LocalCurrentDirection.Normalize();
+    CurrentDirection = LocalCurrentDirection;
+    GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, FString::Printf(TEXT("Current Direction: %s"), *CurrentDirection.ToString()));
 }
 
 void UCharacterPawnMovementComponent::PerformSlideAsyncTrace()
@@ -177,8 +255,8 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
     if (!GetWorld() || !UpdatedComponent)
         return false;
 
-    FVector Start = UpdatedComponent->GetComponentLocation();    
-    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 7.5);
+    FVector Start = UpdatedComponent->GetComponentLocation();
+    FVector End = Start - FVector(0, 0, CapsuleStep * StepMult + 7.5f);
 
     FHitResult GroundHit;
     bool bHit = GetWorld()->SweepSingleByChannel(
@@ -197,9 +275,19 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
 
     if (bHit)
     {
+        GroundNormal = GroundHit.Normal;
+
         float HitAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(GroundHit.Normal, FVector::UpVector)));
-        return HitAngle <= MaxGroundAngle;
+        if (HitAngle <= MaxGroundAngle)
+        {
+            // 👇 Set the actor you're standing on
+            CurrentFloorActor = GroundHit.GetActor();
+            return true;
+        }
     }
 
+    // Reset if not grounded
+    CurrentFloorActor = nullptr;
+    GroundNormal = FVector::UpVector;
     return false;
 }
