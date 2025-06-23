@@ -75,6 +75,11 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     bIsGrounded = CheckIfGrounded();
 
+    if (bIsGrounded)
+    {
+        DashCooldown = 0.f;
+    }
+    
     // Saut bufferé
     if (bIsGrounded && JumpBufferTimer > 0.f && VerticalSpeed <= 0.f)
     {
