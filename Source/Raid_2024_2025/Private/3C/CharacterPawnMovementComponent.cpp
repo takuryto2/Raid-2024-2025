@@ -77,7 +77,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     if (bIsGrounded)
     {
-        DashCooldown = 0.f;
+        DashCooldownTimer = 0.f;
     }
     
     // Saut bufferé
@@ -94,6 +94,9 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         VerticalSpeed += GravityAcceleration * DeltaTime;
     }
 
+    if (bIsGrounded)
+        DashCooldownTimer = 0.f;
+
     // --- DASH (framerate-indépendant) ---
     if (bIsDashing)
     {
@@ -105,16 +108,35 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         float CurrScale = DashCurve ? DashCurve->GetFloatValue(CurrentAlpha) : CurrentAlpha;
         float DeltaScale = CurrScale - PrevScale;
 
-        FVector MoveVec = DashDirection3D * DashDistance * DeltaScale;
-        Movement += MoveVec;
+        // Mouvement principal du dash (direction choisie au moment de l'input)
+        FVector DashMove = DashDirection3D * DashDistance * DeltaScale;
+        Movement += DashMove;
+
+        // --- Ajout de mouvement latéral contrôlable pendant le dash ---
+        if (!CurrentDirection.IsNearlyZero())
+        {
+            float LateralSpeed = VMax * 0.5f; // Réduction de la vitesse latérale pour ne pas dominer le dash
+            FVector2D LateralVec = CurrentDirection * LateralSpeed * DeltaTime;
+            FVector LateralMove = FVector(LateralVec.X, LateralVec.Y, 0.f);
+
+            if (bIsGrounded)
+            {
+                FVector Projected = FVector::VectorPlaneProject(LateralMove, GroundNormal);
+                Movement += Projected;
+            }
+            else
+            {
+                Movement += LateralMove;
+            }
+        }
 
         if (CurrentAlpha >= 1.f)
         {
             bIsDashing = false;
-            bCanMove = true;
             DashTimer = 0.f;
         }
     }
+
 
     // --- MARCHE ---
     else if (!CurrentDirection.IsNearlyZero() && bCanMove)
@@ -177,8 +199,7 @@ void UCharacterPawnMovementComponent::DashInput()
         WalkProgress = 0.f;
         CurrentSpeed = 0.f;
         VerticalSpeed = 0.f;
-
-        bCanMove = false;
+        
         bIsDashing = true;
         DashTimer = 0.f;
         DashCooldownTimer = DashCooldown + DashDuration;
