@@ -194,7 +194,7 @@ void UCharacterPawnMovementComponent::JumpInput()
 
 void UCharacterPawnMovementComponent::DashInput()
 {
-    if (!bIsDashing && DashCooldownTimer <= 0.f)
+    if (!bIsDashing && bIsGrounded)
     {
         WalkProgress = 0.f;
         CurrentSpeed = 0.f;
