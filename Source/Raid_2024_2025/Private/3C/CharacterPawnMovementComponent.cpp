@@ -194,7 +194,7 @@ void UCharacterPawnMovementComponent::JumpInput()
 
 void UCharacterPawnMovementComponent::DashInput()
 {
-    if (!bIsDashing && DashCooldownTimer <= 0.f)
+    if (!bIsDashing && bIsGrounded)
     {
         WalkProgress = 0.f;
         CurrentSpeed = 0.f;
@@ -204,20 +204,18 @@ void UCharacterPawnMovementComponent::DashInput()
         DashTimer = 0.f;
         DashCooldownTimer = DashCooldown + DashDuration;
 
-        FVector DashInput = FVector(CurrentDirection.X, CurrentDirection.Y, 0.f);
+        FVector DashInput(CurrentDirection.X, CurrentDirection.Y, 0.f);
 
-        APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController());
-        if (PC && PC->IsInputKeyDown(EKeys::Z))
+        if (FMath::Abs(LastDashVerticalInput) > KINDA_SMALL_NUMBER)
         {
-            DashInput.Z += 1.f;
-        }
-        if (PC && PC->IsInputKeyDown(EKeys::S))
-        {
-            DashInput.Z -= 1.f;
+            DashInput.Z = LastDashVerticalInput;
         }
 
-        DashDirection3D = DashInput.IsNearlyZero() ? FVector(CurrentRightDirection.X, CurrentRightDirection.Y, 0) : DashInput.GetSafeNormal();
+        DashDirection3D = DashInput.IsNearlyZero()
+            ? FVector(CurrentRightDirection.X, CurrentRightDirection.Y, 0.f)
+            : DashInput.GetSafeNormal();
     }
+
     CurrentFloorActor = nullptr;
 }
 
@@ -226,13 +224,44 @@ void UCharacterPawnMovementComponent::UpdateRightDirection(const FVector2D& NewR
     CurrentRightDirection = NewRightDirection;
 }
 
-void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Direction)
+void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Input)
 {
-    FVector2D LocalCurrentDirection = CurrentRightDirection * FVector2D(Direction.Y);
-    LocalCurrentDirection.Normalize();
-    CurrentDirection = LocalCurrentDirection;
-    GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, FString::Printf(TEXT("Current Direction: %s"), *CurrentDirection.ToString()));
+    if (Input.IsNearlyZero())
+    {
+        CurrentDirection = FVector2D::ZeroVector;
+        LastDashVerticalInput = 0.f;
+        return;
+    }
+
+    // Stocker uniquement l'input vertical (Y) pour le dash
+    LastDashVerticalInput = Input.Y;
+
+    // Utiliser uniquement l'axe X pour le déplacement (gauche/droite)
+    FVector2D FinalInput(Input.X, 0.f);
+
+    if (FinalInput.IsNearlyZero())
+    {
+        CurrentDirection = FVector2D::ZeroVector;
+        return;
+    }
+
+    if (FMath::Abs(Input.X) < MaxJoystickAngle)
+    {
+        FinalInput = FVector2D::ZeroVector;
+        return;
+    }
+    
+
+    // Mouvement uniquement sur l'axe X (donc latéral), en tenant compte de l'orientation caméra
+    FVector2D WorldDirection = FinalInput.X * CurrentRightDirection;
+
+    CurrentDirection = WorldDirection.GetSafeNormal();
+
+    GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Cyan,
+        FString::Printf(TEXT("Input: %s | MoveDir: %s | DashZ: %.2f"),
+        *Input.ToString(), *CurrentDirection.ToString(), LastDashVerticalInput));
 }
+
 
 void UCharacterPawnMovementComponent::PerformSlideAsyncTrace()
 {

@@ -87,6 +87,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Feet Trace")
     float MaxGroundAngle = 45.f;
 
+    UPROPERTY(EditDefaultsOnly)
+    float MaxJoystickAngle = 0.45f;
+
 private:
     FVector2D CurrentDirection;
     float WalkProgress = 0.f;
@@ -108,4 +111,6 @@ private:
     FCollisionShape FeetShape;
 
     FVector GroundNormal;
+
+    float LastDashVerticalInput;
 };
