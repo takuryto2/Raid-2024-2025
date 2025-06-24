@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Camera/CameraComponent.h"
 #include "CharacterPawnMovementComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -14,9 +15,14 @@ public:
 
     void JumpInput();
     void DashInput();
+    void UpdateRightDirection(const FVector2D& NewRightDirection);
     void MoveInput(const FVector2D& Direction);
 
     float CurrentSpeed = 0;
+    FVector2D CurrentRightDirection = FVector2D(0.f, 1.f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UCameraComponent* PlayerCamera;
 
 protected:
     virtual void BeginPlay() override;
@@ -81,10 +87,21 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Feet Trace")
     float MaxGroundAngle = 45.f;
 
+    UPROPERTY(EditDefaultsOnly)
+    float MaxJoystickAngle = 0.45f;
+
 private:
     FVector2D CurrentDirection;
     float WalkProgress = 0.f;
     bool bCanMove = true;
+
+    FVector DashDirection3D;
+
+    //platform tracking
+
+    AActor* CurrentFloorActor = nullptr;
+    FTransform PreviousPlatformTransform;
+    bool bWasOnPlatformLastFrame = false;
 
     // Capsule
     float halfHeight = 0.0f;
@@ -92,4 +109,8 @@ private:
     float StepMult = 0.0f;
     FCollisionQueryParams CollisionParams;
     FCollisionShape FeetShape;
+
+    FVector GroundNormal;
+
+    float LastDashVerticalInput;
 };

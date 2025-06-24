@@ -1,7 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "3C/CharacterPawn.h"
 #include "GameFramework/Actor.h"
+#include "Camera/CameraComponent.h"
 #include "Tower.generated.h"
 
 UCLASS()
@@ -14,6 +16,8 @@ public:
 
     UFUNCTION(BlueprintCallable)
     bool TryTurn(float ActionValue);
+    
+    void TurnInput(float ActionValue, ACharacterPawn* CharacterPawn);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USceneComponent* CameraPivot;
@@ -21,13 +25,22 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     AActor* PlayerActor;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* LeftAnchor;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* RightAnchor;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    USceneComponent* playerCameraPivot;
+
 protected:
     virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
 
     void Turn(float ActionValue);
     void CancelTurn();
-    FVector GetFutureCameraPosition(float ActionValue) const;
+    FVector GetNextCameraPosition(float ActionValue) const;
 
 
     UPROPERTY(EditAnywhere)
@@ -41,4 +54,15 @@ protected:
 
     FRotator InitialRotation;
     FRotator TargetRotation;
+
+    void UpdateCharacterRightDirection();
+
+    FVector PlayerLerpStart;
+    FVector PlayerLerpTarget;
+    float PlayerLerpTimer = 0.f;
+    bool bIsLerpingPlayer = false;
+    const float PlayerLerpDuration = 0.1f;
+    const float OffsetDistance = 200.f;
+
+    void LerpPlayer();
 };
