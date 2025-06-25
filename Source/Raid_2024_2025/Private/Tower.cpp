@@ -112,7 +112,7 @@ void ATower::TurnInput(float ActionValue, ACharacterPawn* CharacterPawn)
 
 void ATower::CancelTurn()
 {
-    if (!CameraPivot)
+    if (!playerCameraPivot)
         return;
 
     UCameraComponent* Camera = nullptr;
@@ -145,6 +145,17 @@ void ATower::CancelTurn()
             Camera->SetRelativeLocation(OriginalLocation);
         }
     }, 0.05f, false);
+
+    if (PlayerActor)
+    {
+        if (ACharacterPawn* CharacterPawn = Cast<ACharacterPawn>(PlayerActor))
+        {
+            if (UCharacterPawnMovementComponent* MoveComp = CharacterPawn->FindComponentByClass<UCharacterPawnMovementComponent>())
+            {
+                MoveComp->SetCanMove(true);
+            }
+        }
+    }
 }
 
 FVector ATower::GetNextCameraPosition(float ActionValue) const
