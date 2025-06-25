@@ -5,7 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "CharacterPawnMovementComponent.generated.h"
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintType))
 class RAID_2024_2025_API UCharacterPawnMovementComponent : public UPawnMovementComponent
 {
     GENERATED_BODY()

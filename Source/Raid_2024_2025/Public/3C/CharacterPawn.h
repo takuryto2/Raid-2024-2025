@@ -50,7 +50,7 @@ public:
 	void SetRightDirection(FVector2D TowerRightDirection);
 
 private:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCharacterPawnMovementComponent> MovementComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
