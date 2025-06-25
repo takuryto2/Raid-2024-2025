@@ -17,6 +17,7 @@ public:
     void DashInput();
     void UpdateRightDirection(const FVector2D& NewRightDirection);
     void MoveInput(const FVector2D& Direction);
+    void SetCanMove(bool bEnable);
 
     float CurrentSpeed = 0;
     FVector2D CurrentRightDirection = FVector2D(0.f, 1.f);
