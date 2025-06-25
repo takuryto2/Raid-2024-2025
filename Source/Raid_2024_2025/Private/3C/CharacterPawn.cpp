@@ -80,6 +80,14 @@ void ACharacterPawn::Move(const FInputActionValue& InputActionValue)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Move Input: %s"), *InputActionValue.ToString()));
 	MovementComponent->MoveInput(InputActionValue.Get<FVector2D>());
+	if (InputActionValue.Get<FVector2D>().X<0.f){
+		isFacingRight = false;
+	}
+	else if (InputActionValue.Get<FVector2D>().X>0.f){
+		isFacingRight = true;
+	}
+	
+	
 }
 
 void ACharacterPawn::SetRightDirection(FVector2D TowerRightDirection)

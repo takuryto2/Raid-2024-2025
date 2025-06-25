@@ -1,4 +1,6 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=963E7633_002D9899_002DEDB3_002D211E_002D93D460FF046D_002Fd_003AClasses_002Fd_003AComponents_002Ff_003AInterpToMovementComponent_002Eh/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=E48B6F94_002DAC81_002DFBDA_002DFDB7_002D6A6074076851_002Ff_003AWindowsPlatformFeatures_002EBuild_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/PencilsConfiguration/FiltersState/=SpellingFilter/@EntryIndexedValue">Off</s:String>
 	<s:String x:Key="/Default/CodeInspection/PencilsConfiguration/FiltersState/=NamingFilter/@EntryIndexedValue">Off</s:String>
 	<s:String x:Key="/Default/CodeInspection/PencilsConfiguration/FiltersState/=CodeStyle/@EntryIndexedValue">Off</s:String></wpf:ResourceDictionary>
