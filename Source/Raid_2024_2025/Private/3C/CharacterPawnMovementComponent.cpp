@@ -211,8 +211,9 @@ void UCharacterPawnMovementComponent::DashInput()
         }
 
         DashDirection3D = DashInput.IsNearlyZero()
-            ? FVector(CurrentRightDirection.X, CurrentRightDirection.Y, 0.f)
+            ? LastDirection.GetSafeNormal()
             : DashInput.GetSafeNormal();
+
     }
 
     CurrentFloorActor = nullptr;
@@ -228,7 +229,6 @@ void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Input)
     if (Input.IsNearlyZero())
     {
         CurrentDirection = FVector2D::ZeroVector;
-        LastDashVerticalInput = 0.f;
         return;
     }
 
