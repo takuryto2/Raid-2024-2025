@@ -34,6 +34,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<class APlayerController> _controller;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	bool isFacingRight = true;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
