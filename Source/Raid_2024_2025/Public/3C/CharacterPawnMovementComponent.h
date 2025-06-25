@@ -17,6 +17,7 @@ public:
     void DashInput();
     void UpdateRightDirection(const FVector2D& NewRightDirection);
     void MoveInput(const FVector2D& Direction);
+    void SetCanMove(bool bEnable);
 
     UPROPERTY(BlueprintReadWrite, Category = "Movement|Speed")
     float CurrentSpeed = 0;
