@@ -76,7 +76,6 @@ protected:
     float DashDistance = 1000.f;
 
     float DashTimer = 0.f;
-    float DashCooldownTimer = 0.f;
     FVector2D DashDirection;
     bool bIsDashing = false;
 
@@ -89,6 +88,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly)
     float MaxJoystickAngle = 0.45f;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    bool bCanDash = true;
 
 private:
     FVector2D CurrentDirection;
@@ -111,6 +113,7 @@ private:
     FCollisionShape FeetShape;
 
     FVector GroundNormal;
+    FVector LastDirection;
 
     float LastDashVerticalInput;
 };

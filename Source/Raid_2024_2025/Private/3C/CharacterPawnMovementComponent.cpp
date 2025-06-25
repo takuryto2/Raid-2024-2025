@@ -13,6 +13,8 @@ UCharacterPawnMovementComponent::UCharacterPawnMovementComponent()
 void UCharacterPawnMovementComponent::BeginPlay()
 {
     Super::BeginPlay();
+    
+    bCanDash = true;
 
     CollisionParams = FCollisionQueryParams(FName(TEXT("FeetTrace")), false, GetOwner());
 
@@ -30,9 +32,7 @@ void UCharacterPawnMovementComponent::BeginPlay()
 void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-    if (DashCooldownTimer > 0.f)
-        DashCooldownTimer -= DeltaTime;
+    
 
     if (JumpBufferTimer > 0.f)
         JumpBufferTimer -= DeltaTime;
@@ -77,7 +77,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
 
     if (bIsGrounded)
     {
-        DashCooldownTimer = 0.f;
+        bCanDash = true;
     }
     
     // Saut bufferé
@@ -95,7 +95,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     }
 
     if (bIsGrounded)
-        DashCooldownTimer = 0.f;
+        bCanDash = true;
 
     // --- DASH (framerate-indépendant) ---
     if (bIsDashing)
@@ -133,7 +133,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
         if (CurrentAlpha >= 1.f)
         {
             bIsDashing = false;
-            DashTimer = 0.f;
+            bCanDash = false;
         }
     }
 
@@ -194,7 +194,7 @@ void UCharacterPawnMovementComponent::JumpInput()
 
 void UCharacterPawnMovementComponent::DashInput()
 {
-    if (!bIsDashing && bIsGrounded)
+    if (!bIsDashing && bCanDash)
     {
         WalkProgress = 0.f;
         CurrentSpeed = 0.f;
@@ -202,7 +202,6 @@ void UCharacterPawnMovementComponent::DashInput()
         
         bIsDashing = true;
         DashTimer = 0.f;
-        DashCooldownTimer = DashCooldown + DashDuration;
 
         FVector DashInput(CurrentDirection.X, CurrentDirection.Y, 0.f);
 
@@ -212,8 +211,9 @@ void UCharacterPawnMovementComponent::DashInput()
         }
 
         DashDirection3D = DashInput.IsNearlyZero()
-            ? FVector(CurrentRightDirection.X, CurrentRightDirection.Y, 0.f)
+            ? LastDirection.GetSafeNormal()
             : DashInput.GetSafeNormal();
+
     }
 
     CurrentFloorActor = nullptr;
@@ -229,7 +229,6 @@ void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Input)
     if (Input.IsNearlyZero())
     {
         CurrentDirection = FVector2D::ZeroVector;
-        LastDashVerticalInput = 0.f;
         return;
     }
 
@@ -238,6 +237,12 @@ void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Input)
 
     // Utiliser uniquement l'axe X pour le déplacement (gauche/droite)
     FVector2D FinalInput(Input.X, 0.f);
+    
+
+    // Mouvement uniquement sur l'axe X (donc latéral), en tenant compte de l'orientation caméra
+    FVector2D WorldDirection = FinalInput.X * CurrentRightDirection;
+
+    LastDirection = FVector(WorldDirection.X, WorldDirection.Y, LastDashVerticalInput);
 
     if (FinalInput.IsNearlyZero())
     {
@@ -250,10 +255,6 @@ void UCharacterPawnMovementComponent::MoveInput(const FVector2D& Input)
         FinalInput = FVector2D::ZeroVector;
         return;
     }
-    
-
-    // Mouvement uniquement sur l'axe X (donc latéral), en tenant compte de l'orientation caméra
-    FVector2D WorldDirection = FinalInput.X * CurrentRightDirection;
 
     CurrentDirection = WorldDirection.GetSafeNormal();
 
