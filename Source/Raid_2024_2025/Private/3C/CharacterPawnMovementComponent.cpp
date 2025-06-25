@@ -4,10 +4,15 @@
 #include "CollisionQueryParams.h"
 #include "Engine/World.h"
 #include "Camera/CameraComponent.h"
+#include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 UCharacterPawnMovementComponent::UCharacterPawnMovementComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
+
+    JumpSound = CreateDefaultSubobject<USoundBase>(TEXT("Jump Sound"));
+    DashSound = CreateDefaultSubobject<USoundBase>(TEXT("Dash Sound"));
 }
 
 void UCharacterPawnMovementComponent::BeginPlay()
@@ -83,6 +88,7 @@ void UCharacterPawnMovementComponent::TickComponent(float DeltaTime, ELevelTick 
     // Saut bufferé
     if (bIsGrounded && JumpBufferTimer > 0.f && VerticalSpeed <= 0.f)
     {
+        UGameplayStatics::SpawnSound2D(GetWorld(), JumpSound);
         VerticalSpeed = JumpVelocity;
         JumpBufferTimer = 0.f;
     }
@@ -213,7 +219,8 @@ void UCharacterPawnMovementComponent::DashInput()
         DashDirection3D = DashInput.IsNearlyZero()
             ? LastDirection.GetSafeNormal()
             : DashInput.GetSafeNormal();
-
+        
+        UGameplayStatics::SpawnSound2D(GetWorld(), DashSound);
     }
 
     CurrentFloorActor = nullptr;

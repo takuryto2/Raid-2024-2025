@@ -27,6 +27,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UCameraComponent* PlayerCamera;
 
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    class USoundBase* JumpSound;
+
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    class USoundBase* DashSound;
+
 protected:
     virtual void BeginPlay() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
