@@ -338,3 +338,8 @@ bool UCharacterPawnMovementComponent::CheckIfGrounded()
     GroundNormal = FVector::UpVector;
     return false;
 }
+
+void UCharacterPawnMovementComponent::SetCanMove(bool bEnable)
+{
+    bCanMove = bEnable;
+}

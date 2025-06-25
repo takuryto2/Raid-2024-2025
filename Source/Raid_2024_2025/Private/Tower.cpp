@@ -1,4 +1,6 @@
 #include "Tower.h"
+
+#include "3C/CharacterPawnMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/StaticMeshComponent.h"
@@ -95,8 +97,13 @@ void ATower::TurnInput(float ActionValue, ACharacterPawn* CharacterPawn)
 {
     if (!CharacterPawn)
         return;
+    
 
-    PlayerActor = CharacterPawn;
+    // Désactive le mouvement du pawn
+    if (UCharacterPawnMovementComponent* MoveComp = Cast<UCharacterPawnMovementComponent>(CharacterPawn->FindComponentByClass<UCharacterPawnMovementComponent>()))
+    {
+        MoveComp->SetCanMove(false);
+    }
 
     TryTurn(ActionValue);
 
@@ -245,8 +252,19 @@ void ATower::Tick(float DeltaTime)
 
         if (Alpha >= 1.0f)
         {
-            CameraPivot->SetWorldRotation(TargetRotation);
             bIsTurning = false;
+
+            // Réactive le mouvement du pawn
+            if (PlayerActor)
+            {
+                if (ACharacterPawn* CharacterPawn = Cast<ACharacterPawn>(PlayerActor))
+                {
+                    if (UCharacterPawnMovementComponent* MoveComp = Cast<UCharacterPawnMovementComponent>(CharacterPawn->FindComponentByClass<UCharacterPawnMovementComponent>()))
+                    {
+                        MoveComp->SetCanMove(true);
+                    }
+                }
+            }
 
             UpdateCharacterRightDirection();
             LerpPlayer();
